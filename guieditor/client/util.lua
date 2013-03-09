@@ -300,7 +300,20 @@ function guiSetSize(element, w, h, relative)
 		-- add a tab to a 500x500 tab panel and the button will be closer to ~20% of the parent
 		-- once this has been set at creation time it never changes again, even if the tab panel is resized
 		-- so we have to change it manually
-		guiSetProperty(element, "TabHeight", 25 / h)
+
+		local h2 = h
+		-- if it is relative, transform back into absolute
+		if relative then
+			local pH = gScreen.y
+			
+			if guiGetParent(element) then
+				_, pH = guiGetSize(guiGetParent(element), false)
+			end
+			
+			h2 = h * pH
+		end
+		
+		guiSetProperty(element, "TabHeight", 25 / h2)
 		--guiSetProperty(element, "AbsoluteTabHeight", 25)
 	end
 	
@@ -365,6 +378,20 @@ function table.count(t)
 end
 
 
+function table.merge(a, b)
+	local t = {}
+	
+	for i,v in ipairs(a) do
+		t[i] = v
+	end
+	
+	for k,v in ipairs(b) do
+		t[#t + 1] = v
+	end
+	
+	return t
+end
+
 
 function rgbToHex(r, g, b)
   return string.format("%02X%02X%02X", r, g, b)
@@ -402,6 +429,11 @@ function string.gsubIgnoreCase(str, match, rep)
 	str = str:gsub(match, rep)
 	
 	return str
+end
+
+
+function string.cleanSpace(str)
+	return str:gsub(" ", "")
 end
 
 

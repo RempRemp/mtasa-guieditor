@@ -44,7 +44,7 @@ function PositionCoder.create()
 	PositionCoder.gui.lblVariables = guiCreateLabel(10, 150, PositionCoder.width - 80, 40, "Preset Variables:\n  'parentW' and 'parentH' represent the element parent size (or screen size)\n  'width' and 'height' represent the elements dimensions", false, PositionCoder.gui.wndMain)
 	guiSetFont(PositionCoder.gui.lblVariables, "default-small")
 
-	PositionCoder.gui.lblPresets = guiCreateLabel(10, 200, PositionCoder.width - 20, 15, "Presets:", false, PositionCoder.gui.wndMain)
+	PositionCoder.gui.lblPresets = guiCreateLabel(50, 200, PositionCoder.width - 100, 15, "Presets:", false, PositionCoder.gui.wndMain)
 	guiLabelSetHorizontalAlign(PositionCoder.gui.lblPresets, "center", false)
 	
 
@@ -53,7 +53,7 @@ function PositionCoder.create()
 	
 	PositionCoder.gui.presets = {}
 	
-	PositionCoder.gui.btnAddPreset = guiCreateButton(PositionCoder.width - 90, 200, 80, 20, "Add preset", false, PositionCoder.gui.wndMain)
+	PositionCoder.gui.btnAddPreset = guiCreateButton(PositionCoder.width - 100, 200, 90, 20, "Add as preset", false, PositionCoder.gui.wndMain)
 	guiSetEnabled(PositionCoder.gui.btnAddPreset, false)
 	
 	addEventHandler("onClientGUIClick", PositionCoder.gui.btnAddPreset,
@@ -125,7 +125,7 @@ function PositionCoder.create()
 			else
 				guiSetSize(PositionCoder.gui.wndMain, w, 285, false)
 				guiSetSize(PositionCoder.gui.scroller, w - 20, 50, false)
-				guiSetSize(PositionCoder.gui.btnAddPreset, 80, 20, false)
+				guiSetSize(PositionCoder.gui.btnAddPreset, 90, 20, false)
 				PositionCoder.gui.imgDividerLeft, PositionCoder.gui.imgDividerRight = divider(PositionCoder.gui.wndMain, 20, 195, w - 40)
 				PositionCoder.loadPresets()
 			end
