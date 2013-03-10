@@ -241,3 +241,7 @@ function Sizer.move(absoluteX, absoluteY)
 	end
 end
 
+
+function Sizer.active()
+	return Sizer.state == "down" and #Sizer.items > 0
+end

@@ -180,7 +180,7 @@ end
 	undo sub menu
 --]]--------------------------------------------------
 function createMenu_undoSub()
-	gMenus.undoSub = Menu:create("Undo Actions", 180)
+	gMenus.undoSub = Menu:create("Undo Actions", 190)
 
 	gMenus.undoSub:addItem(createItem_undoList())
 end
@@ -190,7 +190,7 @@ end
 	redo sub menu
 --]]--------------------------------------------------
 function createMenu_redoSub()
-	gMenus.redoSub = Menu:create("Redo Actions", 180)
+	gMenus.redoSub = Menu:create("Redo Actions", 190)
 
 	gMenus.redoSub:addItem(createItem_redoList())
 end

@@ -132,7 +132,7 @@ end
 
 
 function Mover.move(absoluteX, absoluteY)
-	if Mover.state == "down" then
+	if Mover.state == "down" and Mover.divideValue == 0 then
 		for _,item in ipairs(Mover.items) do
 			local x, y = absoluteX - item.offset.x, absoluteY - item.offset.y
 			local _x, _y = guiGetPosition(item.element, false)
@@ -157,6 +157,11 @@ function Mover.move(absoluteX, absoluteY)
 			guiSetSize(item.element, item.width, item.height, false)
 		end
 	end
+end
+
+
+function Mover.active()
+	return Mover.state == "down" and #Mover.items > 0
 end
 
 
