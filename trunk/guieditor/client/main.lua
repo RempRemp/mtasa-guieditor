@@ -5,6 +5,12 @@
 	
 	Released as is, you are free to do whatever you want with the code
 	
+	For any questions please try the following:
+		MTA forum post: http://forum.mtasa.com/viewtopic.php?f=108&t=22831
+		MTA community post: http://community.mtasa.com/index.php?p=resources&s=details&id=141
+		PM me on the MTA forum (user 'Remp'): http://forum.mtasa.com/ucp.php?i=pm&mode=compose&u=25266
+		Find me on GTANet irc (user 'Remp')
+	
 
 	Bugs/issues:
 		- combobox, scrollbar, scrollpane do not trigger mouse events
@@ -224,7 +230,8 @@ function switch()
 	else
 		gEnabled = true
 		setup()
-		ContextBar.add("GUI Editor enabled")		
+		ContextBar.add("GUI Editor enabled")	
+		UndoRedo.updateGUI()
 	end
 end
 addCommandHandler("guied", switch)
@@ -276,8 +283,6 @@ addEventHandler("onClientClick", root,
 				if t.id ~= "main" then
 					return
 				end
-				
-				
 			end
 			
 			if table.count(Multiple.inside) > 0 then
@@ -520,6 +525,8 @@ addEventHandler("onClientCursorMove", root,
 		resolutionPreview.move(absoluteX, absoluteY)
 		
 		Multiple.move(absoluteX, absoluteY)
+		
+		Snapping.snap()
 	end
 )
 
