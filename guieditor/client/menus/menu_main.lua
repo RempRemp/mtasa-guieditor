@@ -267,6 +267,7 @@ function createMenu_tab()
 	
 	gMenus.tab:addItem(createItem_creation()):setChild(gMenus.create.id)
 	gMenus.tab:addItem(createItem_text())
+	gMenus.tab:addItem(createItem_addTab())
 	gMenus.tab:addItem(createItem_deleteTab())
 	gMenus.tab:addItem(createItem_variable())
 	gMenus.tab:addItem(createItem_properties())

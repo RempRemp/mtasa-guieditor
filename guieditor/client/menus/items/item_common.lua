@@ -901,7 +901,13 @@ function createItem_addTab()
 					local mbox = MessageBox_Input:create(false, "Tab name", "Enter the title for the tab", "Create tab")
 					mbox.onAccept = 
 						function(text, element)
-							local tab = createGUIElementFromType("tab", nil, nil, nil, nil, nil, element, text)
+							local parent = element
+							
+							if getElementType(element) == "gui-tab" then
+								parent = getElementParent(element)
+							end
+							
+							local tab = createGUIElementFromType("tab", nil, nil, nil, nil, nil, parent, text)
 							setupGUIElement(tab)						
 						
 							local action = {}
@@ -1102,7 +1108,14 @@ function createItem_setComboItemText()
 					local item = guiComboBoxGetSelected(element)
 					
 					if item and item ~= -1 then
+						local currentText = guiComboBoxGetItemText(element, item)
+
 						local mbox = MessageBox_Input:create(false, "Combo item text", "Enter the text for the combobox item", "Set item text")
+						
+						if #currentText > 0 then
+							guiSetText(mbox.input, currentText)
+						end
+						
 						mbox.onAccept = 
 							function(text, element, item)	
 								-- this crashes mta, overwritten with a fixed version in getters.lua
