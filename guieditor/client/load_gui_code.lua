@@ -768,6 +768,8 @@ __loadCode = nil
 
 	
 function loadGUICode(code)
+	local preLoadDXCount = #DX_Element.instances
+	
 	code = processCode(code)
 	
 	-- wrap the code in our overwride functions
@@ -886,6 +888,8 @@ function loadGUICode(code)
 
 		_G[a] = nil
 	end
+	
+	processDXEffects(preLoadDXCount)
 
 	return true
 end
@@ -1080,6 +1084,110 @@ function processCode(code)
 	end
 	--outputDebugString(code)
 	return code
+end
+
+
+function processDXEffects(preLoadDXCount)
+	outputDebug("Pre: "..tostring(preLoadDXCount)..", Post: "..tostring(#DX_Element.instances), "TEXT_EFFECT_LOAD")
+	
+	local removal = {}
+	
+	-- if we loaded any dx
+	if #DX_Element.instances > preLoadDXCount then
+		-- loop backwards because shadows/outlines can only exist before their parent in the draw queue
+		for i = #DX_Element.instances, (preLoadDXCount + 1), -1 do
+			-- if there is anything new before this item
+			if i > (preLoadDXCount + 1) then
+				local dx = DX_Element.instances[i]
+				
+				if dx.dxType == gDXTypes.rectangle or dx.dxType == gDXTypes.text then
+					local shadow, outline = {}, {}
+									
+					for k = (i - 1), (preLoadDXCount + 1), -1 do
+						local other = DX_Element.instances[k]
+						
+						if dx:match(other) then
+							if dx.dxType == gDXTypes.rectangle then
+								if dx:isOutline(other) then
+									outline[#outline + 1] = k
+									outputDebug("Found ".. i .." outline: " .. k, "TEXT_EFFECT_LOAD")
+								elseif dx:isShadow(other) then
+									shadow[#shadow + 1] = k
+									outputDebug("Found ".. i .." shadow: " .. k, "TEXT_EFFECT_LOAD")
+								end
+							elseif dx.dxType == gDXTypes.text then
+								local corner = dx:isOutline(other)
+								
+								if corner then
+									local slotted = false
+									
+									-- if there is an existing group without this corner, put it into that
+									for outID, outGroup in ipairs(outline) do
+										if not outGroup[corner] then
+											outline[outID][corner] = k
+											slotted = true
+										end
+									end
+									
+									-- otherwise, make a new group
+									if not slotted then
+										outline[#outline + 1] = {[corner] = k}
+									end
+									
+									outputDebug("Found ".. i .." outline part: " .. k .. "[".. corner .. "]", "TEXT_EFFECT_LOAD")
+								end
+								
+								if dx:isShadow(other) then
+									shadow[#shadow + 1] = k
+									outputDebug("Found ".. i .." shadow: " .. k, "TEXT_EFFECT_LOAD")
+								end							
+							end
+						end
+					end
+					
+					if #shadow > 0 then
+						for _,id in ipairs(shadow) do
+							removal[id] = true
+						end
+						
+						dx.shadow_ = true
+					end
+					
+					if #outline > 0 then
+						local removed = false
+						
+						for _,id in ipairs(outline) do
+							if type(id) == "number" then
+								removal[id] = true
+								removed = true
+							elseif type(id) == "table" then
+								-- only remove them if we found all 4 corners
+								if #id == 4 then
+									for _, otherID in ipairs(id) do
+										removal[otherID] = true
+										removed = true
+									end
+								end
+							end
+						end
+						
+						dx.outline_ = removed
+					end
+				end
+			end
+		end
+		
+		-- remove anything we have flagged as being a shadow/outline
+		for i = #DX_Element.instances, (preLoadDXCount + 1), -1 do
+			if removal[i] then
+				local dx = DX_Element.instances[i]
+				local element = dx.element
+				
+				dx:dxRemove()
+				guiRemove(element, false)
+			end
+		end
+	end
 end
 
 
@@ -1278,6 +1386,14 @@ function LoadCode.addItem(name, size)
 		setRolloverColour(img, {255, 255, 255, 255}, {200, 200, 200, 200})
 		setElementData(img, "guieditor.internal:noLoad", true)
 			
+		-- add one at the top
+		if #LoadCode.items == 0 then
+			local divider = guiCreateStaticImage(0, 0, 380, 1, "images/dot_white.png", false, LoadCode.gui.scpMain)
+			local colour = "FF453B"
+			guiSetProperty(divider, "ImageColours", string.format("tl:64%s tr:00%s bl:64%s br:00%s", colour, colour, colour, colour))
+			setElementData(divider, "guieditor.internal:noLoad", true)		
+		end
+				
 		local divider = guiCreateStaticImage(0, (#LoadCode.items + 1) * 35, 380, 1, "images/dot_white.png", false, LoadCode.gui.scpMain)
 		local colour = "FF453B"
 		guiSetProperty(divider, "ImageColours", string.format("tl:64%s tr:00%s bl:64%s br:00%s", colour, colour, colour, colour))

@@ -11,6 +11,8 @@ Output = {
 	gui = {}
 }
 
+local GenerateBasicLuaCode = true
+
 
 addEvent("guieditor:client_saveSuccess", true)
 addEventHandler("guieditor:client_saveSuccess", root,
@@ -93,7 +95,7 @@ function Output.create()
 	guiLabelSetVerticalAlign(Output.gui.lblFileName, "center")
 	setElementData(Output.gui.lblFileName, "guiSnapTo", {[gGUISides.bottom] = 11})
 	
-	Output.gui.chkGenerateLua = guiCreateCheckBox(10, 310, 100, 30, "Generate basic\nlua code", false, false, Output.gui.wndMain)
+	Output.gui.chkGenerateLua = guiCreateCheckBox(10, 310, 100, 30, "Generate basic\nlua code", GenerateBasicLuaCode, false, Output.gui.wndMain)
 	setElementData(Output.gui.chkGenerateLua, "guiSnapTo", {[gGUISides.bottom] = 10})
 	
 	addEventHandler("onClientGUIClick", Output.gui.chkGenerateLua,
@@ -161,6 +163,10 @@ end
 
 
 function Output.generateCode()
+	if not Output.gui.wndMain then
+		Generation.usingBasicCode = GenerateBasicLuaCode
+	end
+	
 	local code, defaultVariables = Generation.generateCode()
 	
 	Output.show(code, defaultVariables)

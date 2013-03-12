@@ -64,7 +64,7 @@
 	<script src="client/menus/items/item_resolution.lua" type="client"/>
 	<script src="client/menus/items/item_multiple_selection.lua" type="client"/>
 	<script src="client/menus/items/item_dx.lua" type="client"/>
-	
+
 	<script src="client/colorpicker/colorpicker.lua" type="client"/>
     <file src="client/colorpicker/alpha.png"/>
     <file src="client/colorpicker/palette.png"/>
@@ -94,6 +94,7 @@
 	
 	<aclrequest>
 		<right name="general.ModifyOtherObjects" access="true" />
+		<right name="function.callRemote" access="true"/>
 		<!-- <right name="command.start" access="true" /> -->
 	</aclrequest>
 </meta>

@@ -64,6 +64,14 @@ function Generation.generateCode()
 			dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon.position, dx.colour_[1], dx.colour_[2], dx.colour_[3], dx.colour_[4], dx.width, tostring(dx.postGUI_))
 		elseif dx.dxType == gDXTypes.rectangle then
 			--dxDrawRectangle(dx.x, dx.y, dx.width, dx.height, tocolor(unpack(dx.colour_)), dx.postGUI_)
+			
+			-- no point doing both, check outline first since it is encompases shadow anyway
+			if dx:outline() then
+				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.outline.position, dxCommon.outline.size, 0, 0, 0, 255, tostring(dx.postGUI_))	
+			elseif dx:shadow() then
+				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.shadow.position, dxCommon.size, 0, 0, 0, 255, tostring(dx.postGUI_))
+			end	
+			
 			dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.position, dxCommon.size, dx.colour_[1], dx.colour_[2], dx.colour_[3], dx.colour_[4], tostring(dx.postGUI_))
 		elseif dx.dxType == gDXTypes.image then
 			--dxDrawImage(dx.x, dx.y, dx.width, dx.height, dx.filepath, dx.rotation_, dx.rOffsetX_, dx.rOffsetY_, tocolor(unpack(dx.colour_)), dx.postGUI_)
@@ -74,7 +82,22 @@ function Generation.generateCode()
 			text = text:gsub("\n", "\\n") or ""
 			text = text:gsub("\"", "\\\"") or ""
 			
-			dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), %i, %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.position, dxCommon.size, dx.colour_[1], dx.colour_[2], dx.colour_[3], dx.colour_[4], dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
+			if dx:outline() then
+				--	4 --- 2
+				--	|     |
+				--	|     |
+				--	3 --- 1	
+				
+				for i = 1, 4 do
+					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon["outline" .. i].position, dxCommon["outline" .. i].size, 0, 0, 0, 255, dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
+				end
+				
+				--dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.shadow.position, dxCommon.shadow.size, 0, 0, 0, 255, dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
+			elseif dx:shadow() then
+				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.shadow.position, dxCommon.shadow.size, 0, 0, 0, 255, dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
+			end	
+
+			dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.position, dxCommon.size, dx.colour_[1], dx.colour_[2], dx.colour_[3], dx.colour_[4], dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
 		end
 		
 		if dxCommon.fontCreationString then
@@ -109,7 +132,9 @@ function Generation.generateCode()
 	
 
 	-- create tables for all the default variable names (if they are being used)
+	--[[
 	local tableDeclaration
+
 	for elementType,using in pairs(Generation.usingDefaultVariables) do
 		if using then
 			if not tableDeclaration then
@@ -122,37 +147,106 @@ function Generation.generateCode()
 	end
 	
 	if tableDeclaration then
-		prefix = prefix .. "}"
+		--prefix = prefix .. "}"
+	end
+	]]
+	
+	-- actually, merge these into the other variable generation
+	-- this prevents people from generating 2 'GUIEditor' tables (1 default and 1 custom)
+	for elementType,using in pairs(Generation.usingDefaultVariables) do
+		if using then
+			Generation.variableTables["GUIEditor." .. stripGUIPrefix(elementType) .."[n]"] = true
+		end
 	end
 	
 	
 	-- generate table declaration structures for custom tables (if any are being used)
 	local vTables = {}
+	local variableString = ""
 	
 	for var in pairs(Generation.variableTables) do
 		local c = ""
 		local remainder = var
 		local parent = vTables
-		
-		while remainder:find(".", 0, true) or remainder:find("[", 0, true) do
+
+		while #remainder > 0 and (remainder:find(".", 0, true) or remainder:find("[", 0, true)) do
 			local s, e = remainder:find(".", 0, true)
 			local s2, e2 = remainder:find("[", 0, true)
 			
-			local part = remainder:sub(0, math.min(s or 999, s2 or 999) - 1)
-			if not parent[part] then
-				parent[part] = {}
+			-- if we found a matching . first
+			if (s and not s2) or (s and s2 and s < s2) then
+				local part = remainder:sub(0, s - 1)
+				
+				if #part == 0 then
+					break
+				end
+				
+				if not parent[part] then
+					parent[part] = {}
+				end
+				parent = parent[part]
+				
+				-- abc.def.ghi -> def.ghi
+				remainder = remainder:sub(e + 1)
+				
+			-- matching [ first
+			else
+				local part = remainder:sub(0, s2 - 1)
+				
+				if #part == 0 then
+					break
+				end
+				
+				if not parent[part] then
+					parent[part] = {}
+				end
+				parent = parent[part]	
+
+				-- abc[1].def -> [1].def
+				remainder = remainder:sub(e2)
+				
+				local broken = false
+				
+				-- in case we have more than 1 [n] block (ie: abc[1][1][1].def)
+				while #remainder > 0 and remainder:sub(0, 1) == "[" do
+					local s3, e3 = remainder:find("]", 0, true)
+					
+					if s3 and e3 then
+						-- block == "[n]"
+						local block = remainder:sub(0, e3)
+						
+						remainder = remainder:sub(e3 + 1)
+						
+						if remainder:sub(0, 1) == "." then
+							remainder = remainder:sub(2)
+						end
+						
+						if #remainder > 0 then
+							if not parent[block] then
+								parent[block] = {}
+							end
+							parent = parent[block]
+						end
+						
+					-- uh oh
+					else
+						broken = true
+						break
+					end					
+				end
+				
+				if broken then
+					break
+				end
 			end
-			parent = parent[part]
-			
-			remainder = remainder:sub(math.min(e or 999, e2 or 999) + 1)
-		end
+		end		
 	end
 	
 	local function loop(t, level)
 		local i = 1
 		for k,v in pairs(t) do
-			prefix = prefix .. "\n" .. string.rep(Generation.indent, level) .. k .. " = {"
-			
+			variableString = variableString .. "\n" .. string.rep(Generation.indent, level) .. k .. " = {"
+
 			local size = 0
 			
 			if type(v) == "table" then
@@ -161,13 +255,16 @@ function Generation.generateCode()
 				size = table.count(v)
 			end
 			
-			prefix = prefix .. (size > 0 and "\n" .. string.rep(Generation.indent, level) or "") .. (i == table.count(t) and "}" or "},")
+			variableString = variableString .. (size > 0 and "\n" .. string.rep(Generation.indent, level) or "") .. ((level == 0 or i == table.count(t)) and "}" or "},")
 			
 			i = i + 1
 		end
 	end
 	
 	loop(vTables, 0)
+
+	
+	prefix = prefix .. variableString
 	
 	
 	if Generation.usingBasicCode then
@@ -409,9 +506,48 @@ function generateCode_common(element)
 end	
 
 
-function generateCode_commonDX(element, dx)
+function generateCode_commonDX(element, dx, recursive)
 	local common = {}
 	
+	if not recursive then
+		if dx:shadow() ~= nil then
+			local eX, eY = guiGetPosition(element, false)
+			local eW, eH = guiGetSize(element, false)
+			local e = guiCreateLabel(eX + 1, eY + 1, eW, eH, "", false)
+					
+			common.shadow = generateCode_commonDX(e, dx, true)
+			destroyElement(e)
+		end
+		
+		if dx:outline() ~= nil then
+			local eX, eY = guiGetPosition(element, false)
+			local eW, eH = guiGetSize(element, false)
+			
+			if dx.dxType == gDXTypes.rectangle then
+				local e = guiCreateLabel(eX - 1, eY - 1, eW + 2, eH + 2, "", false)					
+				common.outline = generateCode_commonDX(e, dx, true)
+				destroyElement(e)
+			elseif dx.dxType == gDXTypes.text then				
+				--	4 --- 2
+				--	|     |
+				--	|     |
+				--	3 --- 1		
+
+				-- 1:   1	  1
+				-- 2:   1	 -1
+				-- 3:  -1	  1
+				-- 4:  -1	 -1				
+				
+				for i = 1, 4 do
+					local e = guiCreateLabel(eX + (i < 3 and 1 or -1), eY + (((i * 2) % 4) - 1), eW, eH, "", false)					
+					common["outline" .. i] = generateCode_commonDX(e, dx, true)
+					destroyElement(e)						
+				end
+			end
+		end
+	end
+	
+
 	local w, h = guiGetSize(element, getElementData(element, "guieditor:relative"))
 	common.size = w .. ", ".. h
 
@@ -475,27 +611,28 @@ function generateCode_commonDX(element, dx)
 		end
 	end
 	
-	
-	if dx.font_ and type(dx.font_) ~= "string" then
-		if dx.fontPath and type(dx.fontPath) == "string" then
-			local var = Generation.dxFonts[dx.font_] or "dxfont_" .. table.count(Generation.dxFonts)
-				
-			if not Generation.dxFonts[dx.font_] then		
-				Generation.dxFonts[dx.font_] = var
-						
-				common.fontCreationString = "\nlocal " .. var .. " = dxCreateFont(\"".. dx.fontPath .."\")"
+	if not recursive then
+		if dx.font_ and type(dx.font_) ~= "string" then
+			if dx.fontPath and type(dx.fontPath) == "string" then
+				local var = Generation.dxFonts[dx.font_] or "dxfont_" .. table.count(Generation.dxFonts)
 					
-				Generation.usingCustomFont = true
+				if not Generation.dxFonts[dx.font_] then		
+					Generation.dxFonts[dx.font_] = var
+							
+					common.fontCreationString = "\nlocal " .. var .. " = dxCreateFont(\"".. dx.fontPath .."\")"
+						
+					Generation.usingCustomFont = true
+				end
+					
+				common.fontString = var
 			end
-				
-			common.fontString = var
-		end
-	elseif dx.font_ and type(dx.font_) == "string" then
-		common.fontString = "\""..tostring(dx.font_).."\""
-	else
-		common.fontString = "\""..tostring(dx.font_).."\""
-	end	
-
+		elseif dx.font_ and type(dx.font_) == "string" then
+			common.fontString = "\""..tostring(dx.font_).."\""
+		else
+			common.fontString = "\""..tostring(dx.font_).."\""
+		end	
+	end
+	
 	return common
 end
 

@@ -416,9 +416,13 @@ function copyGUIElement(element, silent, parent, ...)
 		if dx.dxType == gDXTypes.line then
 			local dx_ = DX_Line:create(dx.startX, dx.startY, dx.endX, dx.endY, dx.colour_, dx.width, dx.postGUI_, copy)
 			dx_.anchor = dx.anchor
+			dx_.shadow_ = dx.shadow_
+			dx_.outline_ = dx.outline_
 			setElementData(copy, "guieditor.internal:dxElement", dx_.id)
 		elseif dx.dxType == gDXTypes.rectangle then
 			local dx_ = DX_Rectangle:create(dx.x, dx.y, dx.width, dx.height, dx.colour_, dx.postGUI_, copy)
+			dx_.shadow_ = dx.shadow_
+			dx_.outline_ = dx.outline_
 			setElementData(copy, "guieditor.internal:dxElement", dx_.id)
 		elseif dx.dxType == gDXTypes.image then
 			local dx_ = DX_Image:create(dx.x, dx.y, dx.width, dx.height, dx.filepath, dx.rotation_, dx.rOffsetX_, dx.rOffsetY_, dx.colour_, dx.postGUI_, copy)

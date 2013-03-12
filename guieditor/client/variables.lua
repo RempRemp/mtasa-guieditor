@@ -28,10 +28,14 @@ end
 
 
 function setElementVariable(element, variable)
-	if variable and variable ~= "" then
+	if variable and variable ~= "" and not isDefaultVariable(element, variable) then
 		setElementData(element, "guieditor:variable", variable)
 	else
 		setElementData(element, "guieditor:variablePlaceholder", getElementData(element, "guieditor:variablePlaceholder") or generateVariable(element))
+		
+		if getElementData(element, "guieditor:variable") then
+			setElementData(element, "guieditor:variable", nil)
+		end
 	end
 end
 
@@ -110,7 +114,7 @@ end
 
 	
 function reindexPlaceholder(element)
-	if exists(element) and getElementData(element, "guieditor:managed") then
+	if exists(element) and relevant(element) and not getElementData(element, "guieditor:variable") then
 		local t = stripGUIPrefix(getElementType(element))
 			
 		setElementData(element, "guieditor:variablePlaceholder", generateVariable(element))
