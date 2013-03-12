@@ -21,13 +21,14 @@ _DEBUG_CATEGORIES = {
 	LOAD_CODE_INTERNAL = false,
 	POSITION_CODER = false,
 	MENU_ITEM = false,
+	TEXT_EFFECT_LOAD = false,
 }
 
 
 --[[--------------------------------------------------
 	debug things
 --]]--------------------------------------------------
-function outputDebug(message, category)
+function outputDebug(message, category, level)
 	if _DEBUG then
 		message = tostring(message)
 		
@@ -54,6 +55,6 @@ function outputDebug(message, category)
 			end
 		end	
 
-		outputDebugString(source..":"..line..": " .. message, 3)
+		outputDebugString(source..":"..line..": " .. message, level or 3)
 	end
 end

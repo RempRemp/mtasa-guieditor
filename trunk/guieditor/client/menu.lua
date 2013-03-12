@@ -396,6 +396,14 @@ function Menu:open(x, y, guiParent)
 					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
 					
 					item:setValue(dx:postGUI())
+				elseif item.itemID == "shadow" then
+					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					
+					item:setValue(dx:shadow())
+				elseif item.itemID == "outline" then
+					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					
+					item:setValue(dx:outline())
 				end
 			end
 		end				

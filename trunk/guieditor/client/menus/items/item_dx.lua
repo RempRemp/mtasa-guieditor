@@ -668,7 +668,7 @@ function createItem_dxScale()
 	return MenuItem_Text:create("Scale: %value"):set(
 		{
 			onClickClose = false, 
-			editbox = {filter = gFilters.numberInt},
+			editbox = {filter = gFilters.numberFloat},
 			replaceValue = 
 				function(element)
 					local dx = DX_Element.getDXFromElement(element)
@@ -1018,6 +1018,44 @@ function createItem_postGUI()
 				end, 
 			onClickArgs = {"__gui", "__value", true}, 
 			itemID = "postGUI"
+		}
+	)
+end
+
+
+function createItem_dxShadow()
+	return MenuItem_Toggle:create(false, "Shadow"):set(
+		{
+			onClickClose = false,
+			onClick = 
+				function(element, shadowed)
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if dx then
+						dx:shadow(shadowed)
+					end
+				end,
+			onClickArgs = {"__gui", "__value"},
+			itemID = "shadow"
+		}
+	)
+end
+
+
+function createItem_dxOutline()
+	return MenuItem_Toggle:create(false, "Outline"):set(
+		{
+			onClickClose = false,
+			onClick = 
+				function(element, outlined)
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if dx then
+						dx:outline(outlined)
+					end
+				end,
+			onClickArgs = {"__gui", "__value"},
+			itemID = "outline"
 		}
 	)
 end

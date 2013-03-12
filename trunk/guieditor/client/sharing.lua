@@ -137,7 +137,12 @@ function Share.create()
 						local player = getPlayerFromName(name)
 						
 						if player and isElement(player) then
+							local genLua = Generation.usingBasicCode
+							Generation.usingBasicCode = false
+							
 							local code = Generation.generateCode()
+							
+							Generation.usingBasicCode = genLua
 						
 							local chunks = Output.chunkText(code)
 						

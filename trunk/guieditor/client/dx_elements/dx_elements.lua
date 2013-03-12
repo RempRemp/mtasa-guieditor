@@ -280,6 +280,70 @@ function DX_Element:setHeight(value, ignoreUndo)
 end
 
 
+function DX_Element:shadow(value)
+	if value ~= nil then
+		local action = {}
+						
+		action[#action + 1] = {}
+		action[#action].ufunc = 
+			function(d, s)
+				d.shadow_ = s
+			end
+		action[#action].uvalues = {self, self.shadow_}
+						
+		action[#action + 1] = {}
+		action[#action].rfunc = 
+			function(d, s)
+				d.shadow_ = s
+			end
+		action[#action].rvalues = {self, value}				
+
+		action.description = "Set " .. tostring(DX_Element.getTypeFriendly(self.dxType)) .. " shadow ("..tostring(value)..")"
+		
+		UndoRedo.add(action)	
+	
+		self.shadow_ = value
+	else
+		return self.shadow_
+	end
+end	
+
+
+function DX_Element:outline(value)
+	if value ~= nil then
+		local action = {}
+						
+		action[#action + 1] = {}
+		action[#action].ufunc = 
+			function(d, o)
+				d.outline_ = o
+			end
+		action[#action].uvalues = {self, self.outline_}
+						
+		action[#action + 1] = {}
+		action[#action].rfunc = 
+			function(d, o)
+				d.outline_ = o
+			end
+		action[#action].rvalues = {self, value}				
+
+		action.description = "Set " .. tostring(DX_Element.getTypeFriendly(self.dxType)) .. " outline ("..tostring(value)..")"
+		
+		UndoRedo.add(action)	
+	
+		self.outline_ = value
+	else
+		return self.outline_
+	end
+end
+
+
+function DX_Element:match(other)
+	return false
+end
+
+
+
 
 DX_Line = {}
 setmetatable(DX_Line, {__index = DX_Element})
@@ -471,12 +535,43 @@ function DX_Rectangle:create(x, y, width, height, colour, postGUI, element)
 	item.postGUI_ = postGUI
 	item.dxType = gDXTypes.rectangle
 	item.element = element
+	item.shadow_ = false
+	item.outline_ = false
 
 	item = setmetatable(item, {__index = DX_Rectangle})
 	
 	return item
 end
 
+
+function DX_Rectangle:match(other)
+	return self.dxType == other.dxType and
+			self.postGUI_ == other.postGUI_
+end
+
+
+function DX_Rectangle:isShadow(other)
+	return self.x == other.x - 1 and 
+			self.y == other.y - 1 and
+			self.width == other.width and 
+			self.height == other.height and
+			other.colour_[1] == 0 and 
+			other.colour_[2] == 0 and 
+			other.colour_[3] == 0 and 
+			other.colour_[4] == 255
+end
+
+
+function DX_Rectangle:isOutline(other)
+	return self.x == other.x + 1 and
+			self.y == other.y + 1 and
+			self.width == other.width - 2 and
+			self.height == other.height - 2 and
+			other.colour_[1] == 0 and
+			other.colour_[2] == 0 and 
+			other.colour_[3] == 0 and 
+			other.colour_[4] == 255
+end
 
 
 DX_Image = {}
@@ -594,10 +689,26 @@ function DX_Text:create(text, x, y, width, height, colour, scale, font, alignX, 
 	item.subPixelPositioning = subPixelPositioning
 	item.dxType = gDXTypes.text
 	item.element = element
+	item.shadow_ = false
+	item.outline_ = false
 	
 	item = setmetatable(item, {__index = DX_Text})
 	
 	return item
+end
+
+
+function DX_Text:match(other)
+	return self.text_ == other.text_ and
+			self.scale_ == other.scale_ and
+			self.font_ == other.font_ and
+			self.alignX_ == other.alignX_ and
+			self.alignY_ == other.alignY_ and
+			self.clip_ == other.clip_ and
+			self.wordwrap_ == other.wordwrap_ and
+			self.postGUI_ == other.postGUI_ and
+			self.colourCoded_ == other.colourCoded_ and
+			self.subPixelPositioning == other.subPixelPositioning
 end
 
 
@@ -700,6 +811,54 @@ function DX_Text:colourCoded(value)
 end	
 
 
+function DX_Text:isShadow(other)
+	return self.x == other.x - 1 and 
+			self.y == other.y - 1 and
+			self.width == other.width and 
+			self.height == other.height and
+			other.colour_[1] == 0 and 
+			other.colour_[2] == 0 and 
+			other.colour_[3] == 0 and 
+			other.colour_[4] == 255
+end
+
+
+function DX_Text:isOutline(other)
+	if other.colour_[1] == 0 and other.colour_[2] == 0 and other.colour_[3] == 0 and other.colour_[4] == 255 and self.width == other.width and self.height == other.height then
+		if self.x == other.x + 1 and self.y == other.y + 1 then
+			return 1
+		elseif self.x == other.x + 1 and self.y == other.y - 1 then
+			return 2
+		elseif self.x == other.x - 1 and self.y == other.y + 1 then
+			return 3
+		elseif self.x == other.x - 1 and self.y == other.y - 1 then
+			return 4
+		end
+	end
+	
+	return
+end
+
+
+--[[
+				--	4 --- 2
+				--	|     |
+				--	|     |
+				--	3 --- 1		
+				
+				-- 1:   1	  1
+				-- 2:   1	 -1
+				-- 3:  -1	  1
+				-- 4:  -1	 -1		
+				
+				for i = 1, 4 do
+					local e = guiCreateLabel(eX + (i < 3 and 1 or -1), eY + (((i * 2) % 4) - 1), eW, eH, "", false)					
+					common["outline" .. i] = generateCode_commonDX(e, dx, true)
+					destroyElement(e)						
+				end
+]]
+
+
 addEventHandler("onClientRender", root,
 	function()
 		if not gEnabled then
@@ -710,10 +869,29 @@ addEventHandler("onClientRender", root,
 			if dx.dxType == gDXTypes.line then
 				dxDrawLine(dx.startX, dx.startY, dx.endX, dx.endY, tocolor(unpack(dx.colour_)), dx.width, dx.postGUI_)
 			elseif dx.dxType == gDXTypes.rectangle then
+				if dx:shadow() then
+					dxDrawRectangle(dx.x + 1, dx.y + 1, dx.width, dx.height, tocolor(0, 0, 0, 255), dx.postGUI_)
+				end
+				
+				if dx:outline() then
+					dxDrawRectangle(dx.x - 1, dx.y - 1, dx.width + 2, dx.height + 2, tocolor(0, 0, 0, 255), dx.postGUI_)
+				end
+				
 				dxDrawRectangle(dx.x, dx.y, dx.width, dx.height, tocolor(unpack(dx.colour_)), dx.postGUI_)
 			elseif dx.dxType == gDXTypes.image then
 				dxDrawImage(dx.x, dx.y, dx.width, dx.height, dx.filepath, dx.rotation_, dx.rOffsetX_, dx.rOffsetY_, tocolor(unpack(dx.colour_)), dx.postGUI_)
 			elseif dx.dxType == gDXTypes.text then
+				if dx:shadow() then
+					dxDrawText(dx.text_, dx.x + 1, dx.y + 1, dx.x + 1 + dx.width, dx.y + 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+				end	
+
+				if dx:outline() then
+					dxDrawText(dx.text_, dx.x - 1, dx.y - 1, dx.x - 1 + dx.width, dx.y - 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x + 1, dx.y - 1, dx.x + 1 + dx.width, dx.y - 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x + 1, dx.y + 1, dx.x + 1 + dx.width, dx.y + 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x - 1, dx.y + 1, dx.x - 1 + dx.width, dx.y + 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+				end
+
 				dxDrawText(dx.text_, dx.x, dx.y, dx.x + dx.width, dx.y + dx.height, tocolor(unpack(dx.colour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
 			end
 		end

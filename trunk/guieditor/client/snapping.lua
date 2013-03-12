@@ -142,14 +142,14 @@ function Snapping.snap()
 			-- check for snaps against the inside of the parent
 			-- parent overrides sibling
 			local pW, pH = gScreen.x, gScreen.y
-				
+
 			if parent then
-				pW, pH = guiGetSize(guiGetParent(item.element), false)
+				pW, pH = guiGetSize(parent, false)
 			end
 				
 			l, r, t, b = Snapping.calculateSnaps(l, r, t, b, eX, eY, eW, eH, 0, 0, pW, pH, nil, parent)
 			l, r, t, b = Snapping.calculateSnaps(l, r, t, b, eX, eY, eW, eH, 0, 0, pW, pH, -Snapping.offset, parent)				
-
+			
 			local x, y = 0, 0
 			
 			if Mover.active() then
