@@ -19,6 +19,10 @@
 		- many other elements have properties that can be set and never got
 		- gridlists crash guiGetProperties
 		- guiGetFont does not return an element when a custom font is used
+		
+	Wishlist:
+		- relative DX
+		- make multiple selection right click menu smarter when selecting many of the same element type
 --]]--------------------------------------------------
 
 gEnabled = false
@@ -32,6 +36,13 @@ gScreen.x, gScreen.y = guiGetScreenSize()
 
 gGUISides = {left = 0, right = 1, top = 2, bottom = 3}
 gGUIDimensions = {width = 4, height = 5}
+gEventPriorities = {
+	elementBorderRender = "high+100",
+	DXElementRender = "high+10",
+
+	snappingRender = "low-100",
+	hackClick = "low-99999"
+}
 
 gColours = {
 	primary = {255, 69, 59, 255},
@@ -465,7 +476,7 @@ addEventHandler("onClientClick", root,
 			end
 		end
 	end,
-true, "low-99999")
+true, gEventPriorities.hackClick)
 
 
 bindKey("mouse2", "down",
@@ -588,7 +599,7 @@ addEventHandler("onClientRender", root,
 			end
 		end
 	end
-,true, "high+100")
+,true, gEventPriorities.elementBorderRender)
 
 
 function drawBorder(element)
@@ -689,6 +700,14 @@ function guiNeedsBorder(element)
 	return false
 end
 
+
+addEventHandler("onClientGUIFocus", guiRoot,
+	function()
+		if getElementType(source) == "gui-edit" or getElementType(source) == "gui-memo" and not DX_Editbox.inUse() then
+			guiSetInputMode(gDefaultInputMode)
+		end
+	end
+)
 
 
 --[[--------------------------------------------------
@@ -912,13 +931,12 @@ addEventHandler("onClientGUISize", getResourceGUIElement(),
 		if not gEnabled then
 			return
 		end
-	
+		
 		if cancelNextSizeTrigger[source] then
 			cancelNextSizeTrigger[source] = nil
 			return true
 		end
-
-		
+	
 		local parentWidth, parentHeight = guiGetSize(source, false)
 
 		if getElementData(source, "childSnaps") then
@@ -1065,7 +1083,7 @@ addEventHandler("onClientPreRender", root,
 				guiSetPosition(e, s[1], s[2], s[3])
 			end
 		end	
-		getSetPosition = {}		
+		delayedPositioning = {}		
 	
 		for e,s in pairs(delayedSizing) do
 			if exists(e) then

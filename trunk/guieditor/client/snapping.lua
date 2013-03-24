@@ -48,22 +48,53 @@ addEventHandler("onClientRender", root,
 			dxDrawLine(line.sX, line.sY, line.eX, line.eY, Snapping.colour, Snapping.lineWidth, true)
 		end
 	end,
-true, "low-100")
+true, gEventPriorities.snappingRender)
 
 
 function Snapping.snap()
-	if Snapping.active and (Mover.state == "down" or Sizer.state == "down") and not getKeyState("lalt") then
+	if Snapping.active and (Mover.active() or Sizer.active()) and not getKeyState("lalt") then
 		Snapping.lines.clear()
 		
 		local tbl = {}
 		local lookup = {}
-		
+		local siblingLookup = {}
+
 		if Mover.active() then
-			tbl = table.merge(tbl, Mover.items)
-		end
-		
-		if Sizer.active() then
-			tbl = table.merge(tbl, Sizer.items)
+			if #Mover.items > 1 then
+				local l, r, t, b = 99999, -99999, 99999, -99999
+				
+				for _, item in ipairs(Mover.items) do
+					local itemX, itemY = guiGetPosition(item.element, false)
+					local itemW, itemH = guiGetSize(item.element, false)
+					
+					l = math.min(l, itemX)
+					t = math.min(t, itemY)				
+					r = math.max(r, itemX + itemW)
+					b = math.max(b, itemY + itemH)
+					
+					lookup[item.element] = true
+				end
+				
+				if not Snapping.multiMoveGhost or not isElement(Snapping.multiMoveGhost) then
+					local parent = guiGetParent(Mover.items[1].element)
+					
+					if parent == nil then
+						parent = false
+					end
+					
+					Snapping.multiMoveGhost = guiCreateLabel(l, t, r - l, b - t, "", parent)
+					setElementData(Snapping.multiMoveGhost, "guieditor:drawBorder", true)
+				else
+					guiSetPosition(Snapping.multiMoveGhost, l, t, false)
+					guiSetSize(Snapping.multiMoveGhost, r - l, b - t, false)
+				end
+				
+				tbl = {{element = Snapping.multiMoveGhost, isGhost = true}}
+			else
+				tbl = Mover.items
+			end
+		elseif Sizer.active() then
+			tbl = Sizer.items
 		end
 		
 		for _, item in ipairs(tbl) do
@@ -79,7 +110,7 @@ function Snapping.snap()
 			local parent = guiGetParent(item.element)
 				
 			--[[--------------------------------------------------
-				05/mar/13 - reworked snapping, this is no longer needed
+				05/mar/13 - reworked snapping, this is no longer needed (still a bug though)
 				
 				-1 when negative to account for an mta bug
 				
@@ -96,17 +127,41 @@ function Snapping.snap()
 			end		
 			]]
 			-- get all other gui elements on the same 'plane' as this one
-			local siblings = guiGetSiblings(item.element)	
+			local siblings
 			local distances = {}
+			
+			-- cache our sibling lookup (because it takes ages) and re-use for other elements on the same plane
+			for _,set in ipairs(siblingLookup) do
+				if table.find(set, item.element) then
+					siblings = set
+				end
+			end
+			
+			if not siblings then
+				siblings = guiGetSiblings(item.element)	
+				siblingLookup[#siblingLookup + 1] = siblings
+			end
 				
 			for _,sibling in ipairs(siblings) do
-				distances[sibling] = Snapping.getDistance(item.element, sibling)
+				if not lookup[sibling] then
+					distances[sibling] = Snapping.getDistance(item.element, sibling)
+				end
 			end				
 				
 			table.sort(siblings, 
 				function(a, b) 
-					if item.element == a then return 99999 end 
-					--return Snapping.getDistance(item.element, a) < Snapping.getDistance(item.element, b) 
+					if item.element == a then 
+						return false 
+					end 
+					
+					if not distances[a] and not distances[b] then
+						return false
+					elseif distances[a] and not distances[b] then
+						return true
+					elseif distances[b] and not distances[a] then
+						return false
+					end
+					
 					return distances[a] < distances[b]
 				end
 			)
@@ -176,6 +231,15 @@ function Snapping.snap()
 				--outputDebug(string.format("Move: %s, %s [l:%s, r:%s, t:%s, b:%s]", tostring(x), tostring(y), tostring(l), tostring(t), tostring(r), tostring(b)))
 				
 				guiSetPosition(item.element, eX + x, eY + y, false)
+				
+				-- this is just the multi move ghost, so apply the actual snaps to the real elements within it
+				if item.isGhost then
+					for _, mItem in ipairs(Mover.items) do
+						local itemX, itemY = guiGetPosition(mItem.element, false)
+
+						guiSetPosition(mItem.element, itemX + x, itemY + y, false)
+					end
+				end
 			elseif Sizer.active() then
 				if r then
 					x = r * -1
@@ -192,6 +256,11 @@ function Snapping.snap()
 		end
 	else
 		Snapping.lines.clear()
+		
+		if Snapping.multiMoveGhost and isElement(Snapping.multiMoveGhost) then
+			destroyElement(Snapping.multiMoveGhost)
+			Snapping.multiMoveGhost = nil
+		end
 	end
 end
 
@@ -341,22 +410,22 @@ function Snapping.getDistance(a, b)
 	if not exists(a) or not exists(b) then
 		return 99999
 	end
-	
-	local aX, aY = guiGetPosition(a, false)
-	local aW, aH = guiGetSize(a, false)
-	
-	local bX, bY = guiGetPosition(b, false)
-	local bW, bH = guiGetSize(b, false)
-	
+
 	local xOverlap, yOverlap = elementOverlap(a, b)
 	
 	if xOverlap and yOverlap then
 		return 0
 	else
+		local aX, aY = guiGetPosition(a, false)
+		local aW, aH = guiGetSize(a, false)
+		
+		local bX, bY = guiGetPosition(b, false)
+		local bW, bH = guiGetSize(b, false)
+	
 		local xDist, yDist = 0, 0
 		
 		if yOverlap then
-			yDist = 0
+			--yDist = 0
 		elseif aY <= bY then
 			yDist = (aY + aH) - bY
 		else
@@ -364,7 +433,7 @@ function Snapping.getDistance(a, b)
 		end
 		
 		if xOverlap then
-			xDist = 0
+			--xDist = 0
 		elseif aX <= bX then
 			xDist = (aX + aW) - bX
 		else
@@ -374,7 +443,6 @@ function Snapping.getDistance(a, b)
 		return (xDist * xDist) + (yDist * yDist)
 	end
 end
-
 
 
 -- superseded by the one above

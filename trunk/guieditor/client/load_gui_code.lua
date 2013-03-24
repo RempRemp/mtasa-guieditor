@@ -1183,8 +1183,8 @@ function processDXEffects(preLoadDXCount)
 				local dx = DX_Element.instances[i]
 				local element = dx.element
 				
-				dx:dxRemove()
-				guiRemove(element, false)
+				dx:dxRemove(true)
+				destroyElement(element)
 			end
 		end
 	end
