@@ -85,6 +85,22 @@ function createItem_dxMoveToBack()
 	)
 end
 
+function createItem_dxMoveToFront()
+	return MenuItem_Text:create("Move to front"):set(
+		{
+			onClick = 
+				function(element)
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if dx then
+						dx:order(#DX_Element.instances)
+					end
+				end,
+			onClickArgs = {"__gui"}
+		}
+	)
+end
+
 function createItem_dxMoveBack()
 	return MenuItem_Text:create("Step back"):set(
 		{

@@ -33,6 +33,10 @@ function Multiple.click(button, state, absoluteX, absoluteY)
 			Multiple.stopDragging()
 		end
 		
+		if resolutionPreview.active then
+			return
+		end
+		
 		Multiple.dragging = true
 		Multiple.parent = guiGetHoverElement()
 		Multiple.drag = {startX = absoluteX, startY = absoluteY, endX = absoluteX, endY = absoluteY}

@@ -1,5 +1,5 @@
 <meta>
-    <info author="Remp" name="GUI Editor" version="3.0.2" type="misc"/>
+    <info author="Remp" name="GUI Editor" version="3.1.0" type="misc"/>
 
 	<config src="help.xml" type="client"/>
 	
@@ -64,7 +64,7 @@
 	<script src="client/menus/items/item_resolution.lua" type="client"/>
 	<script src="client/menus/items/item_multiple_selection.lua" type="client"/>
 	<script src="client/menus/items/item_dx.lua" type="client"/>
-
+	
 	<script src="client/colorpicker/colorpicker.lua" type="client"/>
     <file src="client/colorpicker/alpha.png"/>
     <file src="client/colorpicker/palette.png"/>

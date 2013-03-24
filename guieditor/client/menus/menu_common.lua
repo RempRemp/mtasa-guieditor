@@ -159,7 +159,7 @@ end
 --]]--------------------------------------------------
 function createMenu_multipleMoveSub()
 	gMenus.multipleMoveSub = Menu:create("Movement")
-
+	
 	gMenus.multipleMoveSub:addItem(createItem_multipleMoveX())
 	gMenus.multipleMoveSub:addItem(createItem_multipleMoveY())
 end

@@ -65,7 +65,7 @@ function Generation.generateCode()
 		elseif dx.dxType == gDXTypes.rectangle then
 			--dxDrawRectangle(dx.x, dx.y, dx.width, dx.height, tocolor(unpack(dx.colour_)), dx.postGUI_)
 			
-			-- no point doing both, check outline first since it is encompases shadow anyway
+			-- no point doing both, check outline first since it encompases shadow anyway
 			if dx:outline() then
 				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.outline.position, dxCommon.outline.size, 0, 0, 0, 255, tostring(dx.postGUI_))	
 			elseif dx:shadow() then

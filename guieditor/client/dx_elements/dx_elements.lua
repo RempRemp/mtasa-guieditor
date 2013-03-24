@@ -14,8 +14,8 @@ local gDXTypeFriendlyString = {"DX Line", "DX Rectangle", "DX Image", "DX Text"}
 DX_Element = {}
 DX_Element.__index = DX_Element
 DX_Element.instances = {}
+DX_Element.currentID = 1
 DX_Element.ids = {}
-DX_Element.removedInstances = {}
 
 DX_Element.getType = 
 	function(id)
@@ -34,24 +34,34 @@ DX_Element.getDXFromElement =
 			
 			if dx then
 				dx = DX_Element.ids[dx]
-				
+					
 				return dx
 			end
 		end
 	end
+	
+DX_Element.reorder = 
+	function()
+		for i,dx in ipairs(DX_Element.instances) do
+			dx.order_ = i
+		end	
+	end
+
 
 
 function DX_Element:create()
+	DX_Element.currentID = DX_Element.currentID + 1
+	
 	local new = setmetatable(
 		{
 			order_ = #DX_Element.instances + 1,
-			id = #DX_Element.instances + 1,
+			id = DX_Element.currentID,
 		},
 		DX_Element
 	)
 	
 	DX_Element.instances[#DX_Element.instances + 1] = new
-	DX_Element.ids[#DX_Element.instances] = new
+	DX_Element.ids[DX_Element.currentID] = new
 	
 	return new
 end
@@ -71,9 +81,7 @@ function DX_Element:order(newOrder)
 		table.remove(DX_Element.instances, self.order_)
 		table.insert(DX_Element.instances, newOrder, self)
 
-		for i,dx in ipairs(DX_Element.instances) do
-			dx.order_ = i
-		end
+		DX_Element.reorder()
 	else
 		return self.order_
 	end
@@ -81,58 +89,45 @@ end
 
 
 function DX_Element:orderMoveUp()
-	if self.order_ < #DX_Element.instances then
-		local swap = DX_Element.instances[self.order_ + 1]
-		DX_Element.instances[self.order_] = swap
-		swap.order_ = self.order_
-		DX_Element.instances[self.order_ + 1] = self
-		self.order_ = self.order_ + 1
+	if self:order() < #DX_Element.instances then
+		self:order(self:order() + 1)
 	end
 end
 
 
 function DX_Element:orderMoveDown()
-	if self.order_ > 1 then
-		local swap = DX_Element.instances[self.order_ - 1]
-		DX_Element.instances[self.order_] = swap
-		swap.order_ = self.order_
-		DX_Element.instances[self.order_ - 1] = self
-		self.order_ = self.order_ - 1
+	if self:order() > 1 then
+		self:order(self:order() - 1)
 	end
 end
 
 
-function DX_Element:dxRemove()
+function DX_Element:dxRemove(hardRemove)
 	if not self.removed then
-		DX_Element.removedInstances[#DX_Element.removedInstances + 1] = self
 		table.remove(DX_Element.instances, self:order())
-		self.removed = true
-		self.orderSaved = self:order()
 		
-		for i,dx in ipairs(DX_Element.instances) do
-			dx.order_ = i
+		if not hardRemove then
+			self.removed = true
+			self.orderSaved = self:order()
+		else
+			self = nil
 		end
+		
+		DX_Element.reorder()
 	end
 end
 
 
 function DX_Element:dxRestore()
-	if self.removed then
-		for i,dx in ipairs(DX_Element.removedInstances) do
-			if dx == self then
-				table.remove(DX_Element.removedInstances, i)
-				break
-			end
-		end
-		
+	if self.removed then	
 		self.removed = nil
 		
 		-- make sure the table gets properly ordered
-		if self.orderSaved > 1 and #DX_Element.instances < (self.orderSaved - 1) then
-			while (#DX_Element.instances < (self.orderSaved - 1)) do
+		if self.orderSaved > 1 and #DX_Element.instances < self.orderSaved then
+			while (#DX_Element.instances < self.orderSaved) do
 				self.orderSaved = self.orderSaved - 1
 				
-				if self.orderSaved <= 0 then
+				if self.orderSaved <= 1 then
 					break
 				end
 			end
@@ -140,9 +135,7 @@ function DX_Element:dxRestore()
 		
 		table.insert(DX_Element.instances, self.orderSaved, self)
 		
-		for i,dx in ipairs(DX_Element.instances) do
-			dx.order_ = i
-		end
+		DX_Element.reorder()
 	end
 end
 
@@ -896,7 +889,7 @@ addEventHandler("onClientRender", root,
 			end
 		end
 	end
-, true, "high+10")
+, true, gEventPriorities.DXElementRender)
 
 
 

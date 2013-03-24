@@ -12,7 +12,16 @@ local gCapslock = false
 DX_Editbox = {}
 DX_Editbox.__index = DX_Editbox
 DX_Editbox.instances = {}
-
+DX_Editbox.inUse = 
+	function()
+		for _,e in ipairs(DX_Editbox.instances) do
+			if e:visible() and e.edit then
+				return true
+			end
+		end
+		
+		return false
+	end
 
 
 function DX_Editbox:create(x, y, w, h, text)
@@ -221,16 +230,8 @@ function DX_Editbox:stopEditing()
 
 	self.edit = nil
 	self.selected = {}
-	
-	local count = 0
-			
-	for _,e in ipairs(DX_Editbox.instances) do
-		if e:visible() and e.edit then
-			count = count + 1
-		end
-	end
-			
-	if count == 0 then
+		
+	if not DX_Editbox.inUse() then
 		guiSetInputMode(gDefaultInputMode)
 	end		
 	
@@ -267,8 +268,7 @@ end
 
 
 function DX_Editbox:draw()
-	if self:visible() then	
-		
+	if self:visible() then		
 		if self.edit then
 			dxDrawRectangle(self.edit.x, self.edit.y, self.edit.w, self.edit.h, tocolor(unpack(self.backgroundEditColour)), self.postGUI)
 
@@ -276,8 +276,7 @@ function DX_Editbox:draw()
 			
 			if self.edit.x + w <= self.x + self.width then
 				dxDrawLine(0,0,0,0, tocolor(255, 255, 255, 255), 0)
-				dxDrawLine(self.edit.x + w, self.edit.y, self.edit.x + w, self.edit.y + self.edit.h, tocolor(unpack(self.caratColour)), 2, self.postGUI)	
-				
+				dxDrawLine(self.edit.x + w, self.edit.y, self.edit.x + w, self.edit.y + self.edit.h, tocolor(unpack(self.caratColour)), 2, self.postGUI)				
 			end
 		end		
 				
