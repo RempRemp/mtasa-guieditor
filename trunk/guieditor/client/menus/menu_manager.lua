@@ -24,12 +24,13 @@ function createMenus()
 	createMenu_redoSub()
 	createMenu_copySub()
 	createMenu_resizeImageSub()
-	
+	createMenu_positionCodeSub()
 	createMenu_gridlistItemSub()
 	
 	createMenu_multipleMoveSub()
 	createMenu_multipleResizeSub()
 	createMenu_multipleCopySub()
+	
 	
 	createMenu_dxDimensionsLineSub()
 	createMenu_dxDimensionsSub()

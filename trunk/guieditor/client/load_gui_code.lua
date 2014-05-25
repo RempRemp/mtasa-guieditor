@@ -868,7 +868,7 @@ function loadGUICode(code)
 	for a,b in pairs(variables) do
 		outputDebug("vars: "..tostring(a)..", "..tostring(b), "LOAD_CODE_INTERNAL")
 		
-		if isElement(b) then
+		if exists(b) then
 			if not isDefaultVariable(b, a) then
 				outputDebug("var: "..tostring(b)..", "..tostring(a).." ["..tostring(isDefaultVariable(b, a)).."]", "LOAD_CODE_INTERNAL")
 				
@@ -880,7 +880,7 @@ function loadGUICode(code)
 			for i,v in pairs(t) do
 				outputDebug("subvar: "..tostring(i)..", "..tostring(a)..tostring(v).." ["..tostring(isDefaultVariable(i, a..v)).."]", "LOAD_CODE_INTERNAL")
 				
-				if isElement(i) and not isDefaultVariable(i, a..v) then
+				if exists(i) and not isDefaultVariable(i, a..v) then
 					setElementVariable(i, a..v)
 				end
 			end
@@ -908,7 +908,7 @@ function findElements(t, variable)
 			v = findElements(v, variable .. (tonumber(k) and "[" .. k .. "]" or "." .. k))
 		end
 		
-		if isElement(v) then
+		if exists(v) then
 			res[v] = variable .. (tonumber(k) and "[" .. k .. "]" or "." .. k)
 		else
 			if type(v) == "table" then

@@ -77,6 +77,7 @@ end
 
 function DX_Slider:value(value)
 	if value then
+		value = math.round(value)
 		self.pointer.value = value
 		self:updatePointerPosition(value)
 	else
@@ -142,7 +143,7 @@ function DX_Slider:updatePointerPosition(value)
 	if self.pointer.position ~= newPosition then
 		self.pointer.position = newPosition
 
-		if self.onChange then
+		if self.onChange and self:visible() then
 			self.onChange(unpack(self.onChangeArgs or {}))
 		end
 	end

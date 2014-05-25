@@ -163,6 +163,11 @@ end
 --]]--------------------------------------------------
 getElementData_ = getElementData
 function getElementData(element, data, inherit)
+	if not element then
+		outputDebugString("Bad element at getElementData(_, " .. tostring(key) .. ", " .. tostring(value) .. ")")
+		return
+	end
+	
 	if getElementInvalidData(element, data) then
 		return getElementInvalidData(element, data)
 	end
@@ -181,6 +186,11 @@ end
 --]]--------------------------------------------------
 setElementData_ = setElementData
 function setElementData(element, key, value)
+	if not exists(element) then
+		outputDebugString("Bad element at setElementData(_, " .. tostring(key) .. ", " .. tostring(value) .. ")")
+		return
+	end
+	
 	if type(value) == "function" then
 		return setElementInvalidData(element, key, value)
 	end
@@ -437,6 +447,21 @@ function string.cleanSpace(str)
 end
 
 
+function string.limit(str, length)
+	local limited = false
+	
+	while dxGetTextWidth(str, 1, "default") > length do
+		str = str:sub(1, -2)
+		
+		if not limited then
+			limited = true
+		end
+	end
+	
+	return str, limited
+end
+
+
 function math.lerp(from, to, t)
     return from + (to - from) * t
 end
@@ -580,4 +605,9 @@ function fromcolor(colour)
 	end
 	
 	return 255,255,255,255
+end
+
+
+function math.round(value)
+	return math.floor(value + 0.5)
 end

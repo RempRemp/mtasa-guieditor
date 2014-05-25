@@ -22,6 +22,7 @@ _DEBUG_CATEGORIES = {
 	POSITION_CODER = false,
 	MENU_ITEM = false,
 	TEXT_EFFECT_LOAD = false,
+	UNDO_REDO_CONDITION = false
 }
 
 

@@ -30,6 +30,7 @@ fontHeights = {
 FontPicker = {	
 	width = 440,
 	height = 280,
+	defaultFontSize = 10,
 	
 	refreshAll = 
 		function()
@@ -365,7 +366,7 @@ function FontPicker:showCustom()
 				
 				fontName = string.reverse(fontName)
 				
-				local f = guiCreateFont(guiGetText(self.custom.edtInput), 10)
+				local f = guiCreateFont(guiGetText(self.custom.edtInput), FontPicker.defaultFontSize)
 				
 				if f then
 					guiSetText(self.custom.lblResult, "Successfully loaded font '" .. fontName .. "'")
@@ -485,14 +486,14 @@ function FontPicker:close(picked, path)
 	if self.onClose then
 		self.onClose(picked)
 	end
-	
+
 	if self.element and picked then
 		local action = {}
 		action[#action + 1] = {}
 		
 		if self.dx then
 			if getElementData(self.element, "guieditor.internal:dxElement") then
-				local dx = DX_Element.ids[getElementData(self.element, "guieditor.internal:dxElement")]
+				local dx = DX_Element.getDXFromElement(self.element)
 				
 				if dx.dxType then
 					action[#action + 1] = {}
@@ -504,11 +505,11 @@ function FontPicker:close(picked, path)
 					action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." font"
 
 					if path then
-						local f = dxCreateFont(path)
+						local f = dxCreateFont(path, FontPicker.defaultFontSize)
 						
 						if f then
-							dx:font(f, path)
-							action[#action].rvalues = {dx, f}		
+							dx:font(f, path, FontPicker.defaultFontSize)
+							action[#action].rvalues = {dx, f, path, FontPicker.defaultFontSize}		
 						end
 					else
 						dx:font(picked)
@@ -518,17 +519,24 @@ function FontPicker:close(picked, path)
 				end		
 			end
 		else
+			local name, font = guiGetFont(self.element)
+			
+			if font == nil then
+				font = name
+			end
+			
 			action[#action].ufunc = guiSetFont
-			action[#action].uvalues = {self.element, guiGetFont(self.element)}
+			action[#action].uvalues = {self.element, font}
 			action[#action].rfunc = guiSetFont
 			action[#action].rvalues = {self.element, picked}
-			
+
 			action.description = "Set "..stripGUIPrefix(getElementType(self.element)).." font"
 			UndoRedo.add(action)
 			
 			guiSetFont(self.element, picked)
 			
 			setElementData(self.element, "guieditor:font", path)
+			setElementData(self.element, "guieditor:fontSize", 10)
 		end
 	end
 	
@@ -549,6 +557,96 @@ function FontPicker:close(picked, path)
 	self = nil
 end
 
+
+function FontPicker:setFontSize(element, size)
+	if not exists(element) then
+		return
+	end
+	
+	-- dx item
+	if getElementData(element, "guieditor.internal:dxElement") then
+		local dx = DX_Element.getDXFromElement(element)
+		
+		if dx.dxType then
+			local font = dx.font_
+			
+			if not exists(font) then
+				return
+			end
+			
+			local fontPath = dx.fontPath
+			
+			if not fontPath then
+				return
+			end
+			
+			local oldSize = dx.fontSize
+			
+			if not oldSize or oldSize == size then
+				return
+			end
+			
+			local newFont = dxCreateFont(fontPath, size)
+			
+			if newFont then
+				dx:font(newFont, fontPath, size)
+				
+				local action = UndoRedo.find({ 
+					{property = "rfunc", propertyValue = DX_Text.font}, 
+					{property = "rvalues", propertyValue = dx, index = 1} ,
+					{property = "rvalues", propertyValue = font, index = 2}
+				})
+
+				if action then
+					action[2].rvalues[2] = newFont
+				end
+				
+				destroyElement(font)
+				font = nil
+			end
+		end
+	-- regular gui
+	else			
+		local _, font = guiGetFont(element)
+		
+		if not exists(font) then
+			return
+		end
+		
+		local fontPath = getElementData(element, "guieditor:font")
+		
+		if not fontPath then
+			return
+		end
+		
+		local oldSize = getElementData(element, "guieditor:fontSize")
+		
+		if oldSize == size then
+			return
+		end
+		
+		local newFont = guiCreateFont(fontPath, size)
+		
+		if newFont then
+			guiSetFont(element, newFont)
+			
+			setElementData(element, "guieditor:fontSize", size)
+			
+			local action = UndoRedo.find({ 
+				{property = "rfunc", propertyValue = guiSetFont}, 
+				{property = "rvalues", propertyValue = element, index = 1} ,
+				{property = "rvalues", propertyValue = font, index = 2}
+			})
+
+			if action then
+				action[1].rvalues[2] = newFont
+			end
+			
+			destroyElement(font)
+			font = nil
+		end
+	end
+end
 
 
 addEventHandler("onClientRender", root,

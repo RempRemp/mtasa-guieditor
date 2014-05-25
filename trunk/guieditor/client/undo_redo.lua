@@ -402,6 +402,74 @@ function UndoRedo.updateGUI()
 end
 
 
+function UndoRedo.findUndo(conditions)
+	UndoRedo.find(conditions, UndoRedo.undoList)
+end
+
+
+function UndoRedo.findRedo(conditions)
+	UndoRedo.find(conditions, UndoRedo.redoList)
+end
+
+--[[ 
+	find an action that matches the given conditions
+
+	e.g. to match a guiSetAlpha(element, 50) call:
+	
+	{
+		{property = "ufunc", propertyValue = guiSetAlpha},
+		{property = "uvalues", propertyValue = element, propertyIndex = 1},
+		{property = "uvalues", propertyValue = 50, propertyIndex = 2}
+	}
+]]
+function UndoRedo.find(conditions, list) 
+	if list == nil then
+		list = table.merge(UndoRedo.undoList, UndoRedo.redoList)
+	end
+	
+	for i, action in ipairs(list) do
+		local match = true
+		local item
+		
+		outputDebug("matching conditions for: " .. tostring(action.description), "UNDO_REDO_CONDITION")
+		
+		for _, actionItem in ipairs(action) do
+			for _, condition in ipairs(conditions) do
+				if not condition.passed then
+					if condition.index then
+						if type(actionItem[condition.property]) == "table" and #actionItem[condition.property] >= condition.index then
+							if actionItem[condition.property][condition.index] == condition.propertyValue then
+								outputDebug("condition match: " .. condition.property .. "[" .. tostring(condition.index) .. "] matches " .. tostring(condition.propertyValue), "UNDO_REDO_CONDITION")
+								condition.passed = true
+							else
+								outputDebug("condition different: " .. condition.property .. "[" .. tostring(condition.index) .. "] found " .. tostring(actionItem[condition.property][condition.index]) .. " expected " .. tostring(condition.propertyValue), "UNDO_REDO_CONDITION")
+							end
+						end
+					else
+						if actionItem[condition.property] == condition.propertyValue then
+							outputDebug("condition match: " .. condition.property .. " matches " .. tostring(condition.propertyValue), "UNDO_REDO_CONDITION")
+							condition.passed = true						
+						else 
+							outputDebug("condition different: " .. condition.property .. " found " .. tostring(actionItem[condition.property]) .. " expected " .. tostring(condition.propertyValue), "UNDO_REDO_CONDITION")
+						end
+					end
+				end
+			end
+		end
+		
+		for _, condition in ipairs(conditions) do
+			if not condition.passed then
+				match = false
+				break
+			end
+		end
+
+		if match then
+			return action
+		end
+	end
+end
+
 
 
 function UndoRedo.guiSetAlpha(element, alpha, convert, down)
@@ -488,6 +556,40 @@ function UndoRedo.guiScrollBarSetScrollPosition(element, scroll, down)
 	end
 end
 
+
+
+function UndoRedo.setFontSize(element, size, down)
+	if exists(element) then
+		local dx = DX_Element.getDXFromElement(element)
+			
+		if down then		
+			local action = {}
+				
+			action[#action + 1] = {}
+			action[#action].ufunc = FontPicker.setFontSize
+			
+			if dx then
+				action[#action].uvalues = {FontPicker, element, dx.fontSize}
+			else
+				action[#action].uvalues = {FontPicker, element, getElementData(element, "guieditor:fontSize")}
+			end
+			
+			setElementData(element, "guieditor.internal:actionFontSize", action)
+		else
+			local action = getElementData(element, "guieditor.internal:actionFontSize")
+				
+			action[#action + 1] = {}
+			action[#action].rfunc = FontPicker.setFontSize
+			action[#action].rvalues = {FontPicker, element, size}
+
+			setElementData(element, "guieditor.internal:actionFontSize", nil)
+
+			action.description = "Set font size "..tostring(size)
+			
+			UndoRedo.add(action)
+		end
+	end
+end
 
 --[[
 addCommandHandler("undo", UndoRedo.undo)

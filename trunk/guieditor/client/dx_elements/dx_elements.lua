@@ -743,10 +743,11 @@ function DX_Text:scale(value)
 end	
 
 
-function DX_Text:font(value, path)
+function DX_Text:font(value, path, size)
 	if value then
 		self.font_ = value
 		self.fontPath = path
+		self.fontSize = size
 	else
 		return self.font_
 	end

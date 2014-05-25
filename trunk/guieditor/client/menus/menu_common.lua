@@ -235,7 +235,7 @@ end
 
 
 --[[--------------------------------------------------
-	dx dimension sub-menu
+	dx dimension sub menu
 --]]--------------------------------------------------
 function createMenu_dxDimensionsLineSub()
 	gMenus.dxDimensionsLineSub = Menu:create("Dimensions")
@@ -255,4 +255,35 @@ function createMenu_dxDimensionsSub()
 	gMenus.dxDimensionsSub:addItem(createItem_dxDimensionsWidth())
 	gMenus.dxDimensionsSub:addItem(createItem_dxDimensionsHeight())
 	--gMenus.dxDimensionsSub:addItem(createItem_offsetFrom())
+end
+
+
+--[[--------------------------------------------------
+	position code sub menu
+--]]--------------------------------------------------
+function createMenu_positionCodeSub()
+	gMenus.positionCodeSub = Menu:create("Presets", 190)
+	gMenus.positionCodeSub.onPreOpen = 
+		function() 
+			gMenus.positionCodeSub:removeAllItems()
+
+			for i,preset in ipairs(PositionCoder.presets) do
+				local t, limited = string.limit(preset.description, gMenus.positionCodeSub.width - 20)
+				
+				if limited then
+					t = t .. "..."
+				end
+				
+				-- reuse items if they are hanging around in memory anyway
+				local item = MenuItem.get({{property = "text", value = t}, {property = "presetIndex", value = i}})
+				
+				if item then
+					gMenus.positionCodeSub:addItem(item)
+				else
+					gMenus.positionCodeSub:addItem(createItem_positionCodePreset(t, i))
+				end
+			end
+		end
+	
+	PositionCoder.loadFile()
 end

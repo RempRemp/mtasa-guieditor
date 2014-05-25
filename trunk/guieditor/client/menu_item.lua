@@ -34,6 +34,24 @@ MenuItem.instances = {}
 
 MenuItem.getFromID = function(id) return MenuItem.instances[id] end
 
+MenuItem.get = 
+	function(conditions) 
+		for _,item in ipairs(MenuItem.instances) do
+			local match = true
+			
+			for _, condition in ipairs(conditions) do
+				if item[condition.property] ~= condition.value then
+					match = false
+					break
+				end
+			end
+			
+			if match then
+				return item
+			end
+		end
+	end
+
 function MenuItem:create()
 	local new = setmetatable(
 		{
@@ -71,6 +89,10 @@ end
 
 
 function MenuItem:draw()
+	if not self:visible() then
+		return
+	end
+		
 	dxDrawRectangle(self.position.x, self.position.y, self.width, self.height, tocolor(unpack(self.mouseState == Menu.mouseStates.off and self.backgroundColour or self.backgroundHighlightColour)), self.menu.postGUI)
 	
 	if self.borderColour and self.borderWidth then
@@ -153,11 +175,25 @@ end
 
 
 function MenuItem:usable()
-	if self.menu and self.menu.visible and self.clickable then
+	if self.menu and self.menu.visible and self.clickable and self:visible() then
 		return true
 	end
 	
 	return
+end
+
+function MenuItem:visible()
+	if self.condition then
+		if self.conditionArgs then
+			local args = self:parseArgs(self.conditionArgs)	
+	
+			return self.condition(unpack(args))
+		else
+			return self.condition()
+		end
+	end
+	
+	return true
 end
 
 
@@ -573,6 +609,10 @@ end
 
 
 function MenuItem_Text:draw()
+	if not self:visible() then
+		return
+	end
+	
 	MenuItem.draw(self, self.position.x, self.position.y, self.width, self.menu.postGUI)
 
 	if self.editbox then
@@ -748,6 +788,10 @@ end
 
 
 function MenuItem_Slider:draw()
+	if not self:visible() then
+		return
+	end
+	
 	MenuItem.draw(self, self.position.x, self.position.y, self.width, self.menu.postGUI)
 	--[[
 	dxDrawText(
@@ -937,6 +981,10 @@ end
 
 
 function MenuItem_Radio:draw()
+	if not self:visible() then
+		return
+	end
+	
 	MenuItem.draw(self, self.position.x, self.position.y, self.width, self.menu.postGUI)
 
 	dxDrawText(
@@ -1049,6 +1097,10 @@ end
 
 
 function MenuItem_Toggle:draw()
+	if not self:visible() then
+		return
+	end
+	
 	MenuItem.draw(self, self.position.x, self.position.y, self.width, self.menu.postGUI)
 
 	if self.alignment.horizontal == "left" then

@@ -36,6 +36,11 @@ function createItem_positionCode()
 end
 
 
+function createItem_positionCodePreset(name, index)
+	return MenuItem_Text:create(name):set({onClick = PositionCoder.open, onClickArgs = {"__gui", index}, presetIndex = index})
+end
+
+
 function createItem_outputType()
 	local m = MenuItem_Radio:create({"Absolute", "Relative"}, "Output type:"):set({onClickClose = false, onClick = setElementOutputType, onClickArgs = {"__gui", "__self"}, itemID = "outputType"})
 	m:setSelected(1)
@@ -196,6 +201,50 @@ end
 
 function createItem_font()
 	return MenuItem_Text:create("Set font"):set({onClick = FontPicker.open, onClickArgs = {FontPicker, "__gui"}})
+end
+
+function createItem_fontSize()
+	return MenuItem_Slider:create("Font size: %value"):set(
+		{
+			onClickClose = false, 
+			onDown = UndoRedo.setFontSize, 
+			onDownArgs = {"__gui", "__value", true}, 
+			onClick = UndoRedo.setFontSize, 
+			onClickArgs = {"__gui", "__value", false}, 
+			onChange = FontPicker.setFontSize, 
+			onChangeArgs = {FontPicker, "__gui", "__value"}, 
+			itemID = "fontSize",
+			onEditStop = 
+				function(editbox, element)
+					if hasText(element) then
+						guiSetReadOnly(element, false)
+					end	
+				end,
+			onEditStopArgs = {"__gui"},
+			onEditStart = 	
+				function(_, element)
+					if hasText(element) then
+						guiSetReadOnly(element, true)
+					end		
+				end,
+			onEditStartArgs = {"__gui"},	
+			condition = 
+				function(element)
+					if exists(element) then
+						local dx = DX_Element.getDXFromElement(element)
+						
+						if dx then
+							return dx.fontPath ~= nil
+						else
+							if guiGetFont(element) ~= gDefaults.font[getElementType(element)] then
+								return getElementData(element, "guieditor:font") ~= nil
+							end
+						end
+					end
+				end,
+			conditionArgs = {"__gui"}
+		}
+	)
 end
 
 

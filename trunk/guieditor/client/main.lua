@@ -19,10 +19,19 @@
 		- many other elements have properties that can be set and never got
 		- gridlists crash guiGetProperties
 		- guiGetFont does not return an element when a custom font is used
-		
+			
 	Wishlist:
 		- relative DX
 		- make multiple selection right click menu smarter when selecting many of the same element type
+		- better editbox support (highlighting from outside the bounds, multiline editing)
+		- GUI Editor wiki page
+		
+	Changes:
+		- Added font size setting
+		- Fixed some undo/redo errors with setting fonts
+		- Added a submenu to the code positioning that shows shortcuts for the presets
+		- Fixed some bugs with the code positioning error detection
+		- Fixed xml files being left open on the server
 --]]--------------------------------------------------
 
 gEnabled = false
@@ -841,10 +850,10 @@ end
 -- so when we create a custom font from code, save the filepath against the font
 -- then when we set the font on an element, transfer the path data to the element
 guiSetFont_ = guiSetFont
-function guiSetFont(element, font)
+function guiSetFont(element, font)	
 	guiSetFont_(element, font)
 
-	if isElement(font) and getElementData(font, "guieditor:font") then
+	if exists(font) and getElementData(font, "guieditor:font") then
 		setElementData(element, "guieditor:font", getElementData(font, "guieditor:font"))
 	end
 end
