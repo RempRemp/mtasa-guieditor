@@ -29,7 +29,7 @@ function Sizer.add(element, sizeX, sizeY, useOffset, ignoreAction)
 		dx = DX_Element.getDXFromElement(element)
 	end
 
-	if not element or not isElement(element) then
+	if not exists(element) then
 		return
 	end
 	

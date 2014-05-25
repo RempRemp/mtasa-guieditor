@@ -24,6 +24,21 @@ local files = {}
 
 local resourceName = getResourceName(getThisResource())
 
+
+addEventHandler("onResourceStart", resourceRoot, 
+	function()
+		if _DEBUG then
+			for _,p in ipairs(getElementsByType("player")) do
+				bindKey(p, "F2", "up", 
+					function() 
+						restartResource(resource)
+					end
+				)
+			end
+		end
+	end
+)
+
 addEvent("guieditor:server_getImages", true)
 addEventHandler("guieditor:server_getImages", root,
 	function()
@@ -117,6 +132,8 @@ function findFilesByType(extension, event)
 						index = index + 1
 						node = xmlFindChild(root, "file", index)
 					end
+					
+					xmlUnloadFile(root)
 				end
 			end
 		else

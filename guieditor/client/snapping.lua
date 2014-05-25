@@ -75,7 +75,7 @@ function Snapping.snap()
 					lookup[item.element] = true
 				end
 				
-				if not Snapping.multiMoveGhost or not isElement(Snapping.multiMoveGhost) then
+				if not exists(Snapping.multiMoveGhost) then
 					local parent = guiGetParent(Mover.items[1].element)
 					
 					if parent == nil then
@@ -257,7 +257,7 @@ function Snapping.snap()
 	else
 		Snapping.lines.clear()
 		
-		if Snapping.multiMoveGhost and isElement(Snapping.multiMoveGhost) then
+		if exists(Snapping.multiMoveGhost) then
 			destroyElement(Snapping.multiMoveGhost)
 			Snapping.multiMoveGhost = nil
 		end

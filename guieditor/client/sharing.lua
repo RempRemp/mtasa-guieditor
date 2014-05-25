@@ -16,7 +16,7 @@ Share = {
 addEvent("guieditor:client_receiveShareNotification", true)
 addEventHandler("guieditor:client_receiveShareNotification", root,
 	function(from)
-		if from and isElement(from) then
+		if from and exists(from) then
 			if not Share.players[from] then
 				Share.players[from] = {}
 			end
@@ -112,7 +112,7 @@ function Share.create()
 					if name then
 						local player = getPlayerFromName(name)
 						
-						if player and isElement(player) and Share.players[player] and Share.players[player].viewing then
+						if player and exists(player) and Share.players[player] and Share.players[player].viewing then
 							triggerServerEvent("guieditor:server_requestShare", localPlayer, player)
 						else
 							local mbox = MessageBox_Info:create("Error", "'"..name.."'\nis not sharing their\nGUI with you")
@@ -136,7 +136,7 @@ function Share.create()
 					if name then
 						local player = getPlayerFromName(name)
 						
-						if player and isElement(player) then
+						if player and exists(player) then
 							local genLua = Generation.usingBasicCode
 							Generation.usingBasicCode = false
 							

@@ -12,6 +12,7 @@
 PositionCoder = {
 	height = 195,
 	width = 425,
+	loaded = false,
 	
 	source = nil,
 	presets = {
@@ -110,27 +111,7 @@ function PositionCoder.create()
 		end
 	)
 	
-	guiWindowTitlebarButtonAdd(PositionCoder.gui.wndMain, "Presets", "left",
-		function()
-			local w, h = guiGetSize(PositionCoder.gui.wndMain, false)
-			
-			-- collapse
-			if h > 200 then
-				guiSetSize(PositionCoder.gui.wndMain, w, 195, false)
-				destroyElement(PositionCoder.gui.imgDividerLeft)
-				destroyElement(PositionCoder.gui.imgDividerRight)
-				
-				PositionCoder.destroyPresets()		
-			-- expand
-			else
-				guiSetSize(PositionCoder.gui.wndMain, w, 285, false)
-				guiSetSize(PositionCoder.gui.scroller, w - 20, 50, false)
-				guiSetSize(PositionCoder.gui.btnAddPreset, 90, 20, false)
-				PositionCoder.gui.imgDividerLeft, PositionCoder.gui.imgDividerRight = divider(PositionCoder.gui.wndMain, 20, 195, w - 40)
-				PositionCoder.loadPresets()
-			end
-		end
-	)
+	guiWindowTitlebarButtonAdd(PositionCoder.gui.wndMain, "Presets", "left", PositionCoder.togglePresets)
 	--guiWindowTitlebarButtonAdd(PositionCoder.gui.wndMain, "blah3", "left")
 	
 	guiWindowTitlebarButtonAdd(PositionCoder.gui.wndMain, "Close", "right", PositionCoder.close)
@@ -139,9 +120,29 @@ function PositionCoder.create()
 end
 
 
-function PositionCoder.open(element, testText)
+function PositionCoder.togglePresets() 
+	local w, h = guiGetSize(PositionCoder.gui.wndMain, false)
+	
+	-- collapse
+	if h > 200 then
+		guiSetSize(PositionCoder.gui.wndMain, w, 195, false)
+		destroyElement(PositionCoder.gui.imgDividerLeft)
+		destroyElement(PositionCoder.gui.imgDividerRight)
+		
+		PositionCoder.destroyPresets()		
+	-- expand
+	else
+		guiSetSize(PositionCoder.gui.wndMain, w, 285, false)
+		guiSetSize(PositionCoder.gui.scroller, w - 20, 50, false)
+		guiSetSize(PositionCoder.gui.btnAddPreset, 90, 20, false)
+		PositionCoder.gui.imgDividerLeft, PositionCoder.gui.imgDividerRight = divider(PositionCoder.gui.wndMain, 20, 195, w - 40)
+		PositionCoder.loadPresets()
+	end
+end
+
+function PositionCoder.open(element, presetToLoad)
 	if not PositionCoder.gui then
-		PositionCoder.create()
+		PositionCoder.create(presetToLoad)
 		
 		PositionCoder.loadFile()
 	end
@@ -174,16 +175,25 @@ function PositionCoder.open(element, testText)
 	
 	guiSetText(PositionCoder.gui.lblResult, "Test Result: -")
 	
-	if testText then
-		PositionCoder.testString = testText
-	else
-		PositionCoder.testString = "guiSetPosition(element, %s, %s, false)"
-	end
-	
+	PositionCoder.testString = "guiSetPosition(element, %s, %s, false)"
+
 	PositionCoder.source = element
 	
 	guiSetVisible(PositionCoder.gui.wndMain, true)
 	guiBringToFront(PositionCoder.gui.wndMain)
+	
+					
+	if presetToLoad then
+		presetToLoad = tonumber(presetToLoad)
+		
+		if presetToLoad and presetToLoad <= #PositionCoder.presets then
+			PositionCoder.togglePresets()
+			
+			triggerEvent("onClientGUIClick", PositionCoder.gui.presets[presetToLoad].preset)
+			
+			PositionCoder.done()
+		end
+	end
 end
 
 
@@ -241,7 +251,7 @@ function PositionCoder.done(button, state)
 		outputDebug(string.format("Result x: %s, %s", resultX, errorX or ""), "POSITION_CODER")
 		outputDebug(string.format("Result y: %s, %s", resultY, errorY or ""), "POSITION_CODER")
 		
-		if (not errorX or errorX == "") and (not errorY or errorY == "") then
+		if ((not errorX) or (errorX == "")) and ((not errorY) or (errorY == "")) then
 			PositionCoder.setPositionCode(PositionCoder.source, x, y, resultX, resultY)
 		--[[
 			if PositionCoder.source and exists(PositionCoder.source) then
@@ -305,12 +315,14 @@ function PositionCoder.runTest()
 	local resultX, errorX = PositionCoder.runOutput(sX)
 	local resultY, errorY = PositionCoder.runOutput(sY)
 			
-	if (not errorX or errorX == "") and (not errorY or errorY == "") and (x ~= "" and y ~= "") then			
+	if ((not errorX) or (errorX == "")) and ((not errorY) or (errorY == "")) and (x ~= "" and y ~= "") then			
 		guiSetText(PositionCoder.gui.btnDone, "Done")
 		guiSetEnabled(PositionCoder.gui.btnAddPreset, true)
+		guiSetColour(PositionCoder.gui.lblResult, unpack(gColours.defaultLabel))
 	else
 		guiSetText(PositionCoder.gui.btnDone, "Error")
 		guiSetEnabled(PositionCoder.gui.btnAddPreset, false)
+		guiSetColour(PositionCoder.gui.lblResult, unpack(gColours.primary))
 	end
 			
 	guiSetText(PositionCoder.gui.lblResult, string.format("Test Result: " .. PositionCoder.testString, resultX, resultY))
@@ -360,13 +372,15 @@ function PositionCoder.runOutput(output)
 		return "ERROR", result
 	end
 	
-	result = result or "ERROR"
-	
-	if tonumber(result) then
-		result = string.format("%.2f", result)
+	if not result then
+		return "ERROR", "ERROR"
 	end
 	
-	return result
+	if tonumber(result) then
+		return string.format("%.2f", result)
+	end
+	
+	return "ERROR", "ERROR"
 end
 
 --[[--------------------------------------------------
@@ -392,7 +406,6 @@ function PositionCoder.loadPresets()
 				guiSetText(PositionCoder.gui.btnDone, "Done")
 			end
 		, false)
-			
 
 		if preset.removable then
 			PositionCoder.gui.presets[i].delete = guiCreateStaticImage(w-40, ((i - 1) * 15), 16, 16, "images/cross.png", false, PositionCoder.gui.scroller)
@@ -498,6 +511,10 @@ end
 
 
 function PositionCoder.loadFile()
+	if PositionCoder.loaded then
+		return
+	end
+	
 	local file = xmlLoadFile("settings.xml")
 	
 	if not file then
@@ -505,6 +522,8 @@ function PositionCoder.loadFile()
 	end
 	
 	if file then
+		PositionCoder.loaded = true
+		
 		local base = getChild(file, "position_coder", 0)
 		
 		for i,node in ipairs(xmlNodeGetChildren(base)) do

@@ -89,7 +89,9 @@ function Menu:calculateHeight()
 	local heightOffset = 0
 				
 	for _,item in ipairs(self.items) do
-		heightOffset = heightOffset + item.height
+		if item:visible() then
+			heightOffset = heightOffset + item.height
+		end
 	end	
 	
 	self.height = heightOffset	
@@ -103,8 +105,18 @@ end
 
 function Menu:removeItem(index)
 	if self.items[index] then
+		self.items[index].menu = nil
+		
 		table.remove(self.items, index)
 	end
+end
+
+function Menu:removeAllItems() 
+	for i = 1, #self.items do
+		self:removeItem(2)
+	end
+	
+	self:calculateHeight()
 end
 
 
@@ -192,8 +204,10 @@ function Menu:calculateItemPositions(index)
 		for _,item in ipairs(self.items) do
 			--item.position = {x = self.position.x, y = self.position.y + heightOffset}
 			item:setPosition(self.position.x, self.position.y + heightOffset)
-	
-			heightOffset = heightOffset + item.height
+				
+			if (item:visible()) then
+				heightOffset = heightOffset + item.height
+			end
 		end		
 	end
 end
@@ -222,6 +236,10 @@ end
 
 
 function Menu:open(x, y, guiParent)
+	if self.onPreOpen then
+		self.onPreOpen(self)
+	end
+	
 	for _,id in pairs(self.children) do
 		if Menu.getFromID(id).visible then
 			Menu.getFromID(id):close()
@@ -385,25 +403,38 @@ function Menu:open(x, y, guiParent)
 				elseif item.itemID == "scroll" then
 					item:setValue(guiScrollBarGetScrollPosition(gui))	
 				elseif item.itemID == "clip" then
-					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					local dx = DX_Element.getDXFromElement(gui)
 					
 					item:setValue(dx:clip())
 				elseif item.itemID == "colourCoded" then
-					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					local dx = DX_Element.getDXFromElement(gui)
 					
 					item:setValue(dx:colourCoded())		
 				elseif item.itemID == "postGUI" then
-					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					local dx = DX_Element.getDXFromElement(gui)
 					
 					item:setValue(dx:postGUI())
 				elseif item.itemID == "shadow" then
-					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					local dx = DX_Element.getDXFromElement(gui)
 					
 					item:setValue(dx:shadow())
 				elseif item.itemID == "outline" then
-					local dx = DX_Element.ids[getElementData(gui, "guieditor.internal:dxElement")]
+					local dx = DX_Element.getDXFromElement(gui)
 					
 					item:setValue(dx:outline())
+				elseif item.itemID == "fontSize" then
+					local dx = DX_Element.getDXFromElement(gui)
+					local size
+					
+					if dx then
+						size = dx.fontSize
+					else
+						size = getElementData(gui, "guieditor:fontSize")
+					end
+					
+					if size then
+						item:setValue(size)
+					end
 				end
 			end
 		end				
@@ -417,6 +448,7 @@ function Menu:open(x, y, guiParent)
 	self:setVisible(true)
 	
 	self:updateMouseState()	
+	self:calculateHeight()
 	
 	if self.onOpen then
 		self.onOpen(self)

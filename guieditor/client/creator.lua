@@ -99,7 +99,7 @@ end
 	takes an absolute screen position and returns the same screen position relative to a specified element
 --]]--------------------------------------------------
 function Creator.parsePosition(x, y, parent)
-	if parent and isElement(parent) then
+	if parent and exists(parent) then
 		local parentX, parentY = guiGetAbsolutePosition(parent)
 
 		return x - parentX, y - parentY

@@ -29,7 +29,7 @@ function Mover.add(element, moveX, moveY, ignoreWarnings)
 		end
 	end
 
-	if not element or not isElement(element) then
+	if not element or not exists(element) then
 		return
 	end
 	
