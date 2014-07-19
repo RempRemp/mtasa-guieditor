@@ -13,8 +13,6 @@
 	
 
 	Bugs/issues:
-		- combobox, scrollbar, scrollpane do not trigger mouse events
-		- gridlists do not fully trigger mouse events
 		- cannot get the original filepath of a gui image
 		- many other elements have properties that can be set and never got
 		- gridlists crash guiGetProperties
@@ -25,6 +23,8 @@
 		- make multiple selection right click menu smarter when selecting many of the same element type
 		- better editbox support (highlighting from outside the bounds, multiline editing)
 		- GUI Editor wiki page
+		- Output in OO format
+		- Document all new changes
 		
 	Changes:
 		- Added font size setting
@@ -32,6 +32,12 @@
 		- Added a submenu to the code positioning that shows shortcuts for the presets
 		- Fixed some bugs with the code positioning error detection
 		- Fixed xml files being left open on the server
+		- Added highlight colour to editable fields in the right click menus
+		- Made the copy option automatically attach the new copy to the mouse (for element movement)
+		- Detach/attach options to re-parent elements
+		- Added setting to autosize the code output window to the code content length
+		- Added Maximise/Restore titlebar options to the output window
+		- Added highlight to elements with default variables when the output window warning is clicked
 --]]--------------------------------------------------
 
 gEnabled = false
@@ -46,6 +52,7 @@ gScreen.x, gScreen.y = guiGetScreenSize()
 gGUISides = {left = 0, right = 1, top = 2, bottom = 3}
 gGUIDimensions = {width = 4, height = 5}
 gEventPriorities = {
+	elementSelectRender = "high+101",
 	elementBorderRender = "high+100",
 	DXElementRender = "high+10",
 
@@ -54,9 +61,9 @@ gEventPriorities = {
 }
 
 gColours = {
-	primary = {255, 69, 59, 255},
-	secondary = {255, 118, 46, 255},
-	tertiary = {232, 42, 104, 255},
+	primary = {255, 69, 59, 255}, -- red
+	secondary = {255, 118, 46, 255}, -- orange
+	tertiary = {232, 42, 104, 255}, -- pink
 	
 	defaultLabel = {255, 255, 255},
 	grey = {120, 120, 120},
@@ -180,7 +187,7 @@ guiSetInputMode(gDefaultInputMode)
 
 
 gRightClickHack = {}
-
+gDrawSelectionList = {}
 
 
 addEventHandler("onClientResourceStart", resourceRoot,
@@ -378,7 +385,7 @@ addEventHandler("onClientClick", root,
 				--	e = getElementData(e, "guieditor.internal:redirect")
 				--end
 
-				if getElementData(e, "guieditor:managed") then
+				if managed(e) then
 					local elementType = string.lower(getElementType(e))
 					elementType = stripGUIPrefix(elementType)
 					
@@ -411,6 +418,7 @@ addEventHandler("onClientClick", root,
 		resolutionPreview.click(button, state, absoluteX, absoluteY)
 		
 		Offset.click(button, state, absoluteX, absoluteY)
+		Attacher.click(button, state, absoluteX, absoluteY)
 		
 		Multiple.click(button, state, absoluteX, absoluteY)
 	end
@@ -422,8 +430,9 @@ addEventHandler("onClientMouseEnter", root,
 		if not gEnabled then
 			return
 		end
-		
+
 		Creator.enter(source, absoluteX, absoluteY)
+		Attacher.enter(source, absoluteX, absoluteY)
 	end
 )
 
@@ -435,19 +444,9 @@ addEventHandler("onClientMouseLeave", root,
 		end
 		
 		Creator.leave(source, absoluteX, absoluteY)
+		Attacher.leave(source, absoluteX, absoluteY)
 	end
 )
-
-
---[[
-addEventHandler("onClientClick", root,
-	function(button, state, absoluteX, absoluteY)
-		if not gEnabled then
-			return
-		end
-	end,
-true, "high+99999")
-]]
 
 
 --[[--------------------------------------------------
@@ -468,6 +467,11 @@ true, "high+99999")
 		- scrollpane scrollbars cannot be dragged
 			- this is a choice between either non-dragable scrollbars, or not having a border
 			- since having no border would make them completely useless, having non working scrollbars and being semi-useful is the best choice
+			
+	Update 19/07/2014
+		The mouse events now trigger for all gui elements properly. However, mouse events for children of those fixed elements are now wrong. 
+		E.g. a label that is a child of a scrollpane will trigger onClientMouseEnter when the mouse is nowhere near the label
+		Keeping this hack in until this is fixed in mta
 --]]--------------------------------------------------
 addEventHandler("onClientClick", root,
 	function(button, state, absoluteX, absoluteY)
@@ -710,6 +714,37 @@ function guiNeedsBorder(element)
 end
 
 
+--[[--------------------------------------------------
+	selection drawing
+--]]--------------------------------------------------
+addEventHandler("onClientRender", root,
+	function()
+		if not gEnabled then
+			return
+		end
+		
+		for element,pos in pairs(gDrawSelectionList) do
+			dxDrawImage(pos.x - (pos.s /  2), pos.y - (pos.s / 2), pos.s, pos.s, "images/dx_elements/radio_button.png", 0, 0, 0, tocolor(unpack(gColours.tertiary)), true)
+		end
+	end
+,true, gEventPriorities.elementSelectRender)
+
+
+function addToSelectionList(element, size)
+	local x, y = guiGetAbsolutePosition(element)
+	local w, h = guiGetSize(element, false)
+	size = tonumber(size) or 8
+
+	if not gDrawSelectionList[element] then
+		gDrawSelectionList[element] = {x = x + (w / 2), y = y + (h / 2), s = size}
+	end
+end
+
+function removeFromSelectionList(element)
+	gDrawSelectionList[element] = nil
+end
+
+
 addEventHandler("onClientGUIFocus", guiRoot,
 	function()
 		if getElementType(source) == "gui-edit" or getElementType(source) == "gui-memo" and not DX_Editbox.inUse() then
@@ -947,7 +982,7 @@ addEventHandler("onClientGUISize", getResourceGUIElement(),
 		end
 	
 		local parentWidth, parentHeight = guiGetSize(source, false)
-
+		
 		if getElementData(source, "childSnaps") then
 			for _,child in ipairs(getElementChildren(source)) do			
 				if getElementData(child, "guiSnapTo") then	

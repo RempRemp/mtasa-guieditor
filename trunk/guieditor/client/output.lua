@@ -8,7 +8,8 @@
 
 
 Output = {
-	gui = {}
+	gui = {},
+	restoreData = {},
 }
 
 local GenerateBasicLuaCode = true
@@ -43,8 +44,29 @@ function Output.create()
 			ContextBar.add("Output code copied to clipboard")
 		end
 	)
+	guiWindowTitlebarButtonAdd(Output.gui.wndMain, "Maximise", "right",
+		function(label)
+			-- we are maximise, so restore to saved state
+			if Output.restoreData.x then
+				guiWindowSetSizable(Output.gui.wndMain, true)
+				Output.sizeAndMove(Output.restoreData.w, Output.restoreData.h, Output.restoreData.x, Output.restoreData.y)
+				Output.restoreData = {}
+				guiSetText(label, "Maximise")
+				return
+			end
+			
+			-- otherwise store current state and maximise
+			Output.restoreData.x, Output.restoreData.y = guiGetPosition(Output.gui.wndMain, false)
+			Output.restoreData.w, Output.restoreData.h = guiGetSize(Output.gui.wndMain, false)
+			
+			Output.sizeAndMove(gScreen.x, gScreen.y, 0, 0)
+			guiWindowSetSizable(Output.gui.wndMain, false)
+			
+			guiSetText(label, "Restore")
+		end, "__self"
+	)
 	setElementData(Output.gui.wndMain, "guiSizeMinimum", {w = 460, h = 300})
-	
+
 	Output.gui.memOutput = guiCreateMemo(10, 25, 530, 275, "", false, Output.gui.wndMain)
 	guiMemoSetReadOnly(Output.gui.memOutput, true)
 	setElementData(Output.gui.memOutput, "guiSnapTo", {[gGUISides.left] = 10, [gGUISides.right] = 10, [gGUISides.top] = 25, [gGUISides.bottom] = 50})
@@ -55,14 +77,39 @@ function Output.create()
 	setElementData(Output.gui.imgWarningBackground, "guiSnapTo", {[gGUISides.left] = 0, [gGUISides.right] = 0, [gGUISides.bottom] = 0})
 	guiSetProperty(Output.gui.imgWarningBackground, "ImageColours", string.format("tl:00%s tr:00%s bl:FF%s br:FF%s", unpack(gAreaColours.darkPacked)))
 
-	Output.gui.lblWarning = guiCreateLabel(0, 260, 530, 15, "Note: Some of your GUI elements are still using default variable names.", false, Output.gui.memOutput)
+	Output.gui.lblWarning = guiCreateLabel(20, 260, 490, 15, "Note: Some of your GUI elements are still using default variable names.", false, Output.gui.memOutput)
 	guiLabelSetHorizontalAlign(Output.gui.lblWarning, "center", false)
 	guiLabelSetVerticalAlign(Output.gui.lblWarning, "top")
 	guiSetColour(Output.gui.lblWarning, unpack(gColours.primary))
+	setRolloverColour(Output.gui.lblWarning, gColours.secondary, gColours.primary)
 	guiSetFont(Output.gui.lblWarning, "default-bold-small")
-	guiSetProperty(Output.gui.lblWarning, "MousePassThroughEnabled", "True")
-	setElementData(Output.gui.lblWarning, "guiSnapTo", {[gGUISides.left] = 0, [gGUISides.right] = 0, [gGUISides.bottom] = 0})	
+	--guiSetProperty(Output.gui.lblWarning, "MousePassThroughEnabled", "True")
+	setElementData(Output.gui.lblWarning, "guiSnapTo", {[gGUISides.left] = 20, [gGUISides.right] = 20, [gGUISides.bottom] = 0})	
 	
+	addEventHandler("onClientGUIClick", Output.gui.lblWarning,
+		function(button, state)
+			if button == "left" and state == "up" then
+				if #Generation.elementsUsingDefaultVariables > 0 then
+					for i,element in ipairs(Generation.elementsUsingDefaultVariables) do
+						addToSelectionList(element, 20)
+					end	
+					
+					if Output.gui.lblWarningTimer and isTimer(Output.gui.lblWarningTimer) then
+						killTimer(Output.gui.lblWarningTimer)
+					end
+					
+					Output.gui.lblWarningTimer = setTimer(
+						function() 
+							for i,element in ipairs(Generation.elementsUsingDefaultVariables) do
+								removeFromSelectionList(element)
+							end	
+						end, 
+					3000, 1) 
+				end
+			end
+		end
+	, false)
+
 	Output.hideWarning()
 	
 	
@@ -133,6 +180,20 @@ function Output.show(text, defaultVariables)
 	end
 	
 	guiSetText(Output.gui.memOutput, text or "")
+
+	-- don't try to resize if we resizing is turned off, usually means that the window is maximised
+	if Settings.loaded.output_window_autosize.value and guiWindowGetSizable(Output.gui.wndMain) then
+		if not guiGetVisible(Output.gui.wndMain) then
+			local w, h = guiGetSize(Output.gui.wndMain, false)
+			local x, y = guiGetPosition(Output.gui.wndMain, false)
+			local centered = x == (gScreen.x - w) / 2 and y == (gScreen.y - h) / 2
+			
+			-- 20 for gap between memo and window, 20 for memo internal borders (including scrollbar), 5 for good measure
+			if (Generation.biggestWidth + 45) > w then		
+				Output.sizeAndMove(Generation.biggestWidth + 45, h, centered and (gScreen.x - (Generation.biggestWidth + 45)) / 2 or x, centered and (gScreen.y - h) / 2 or y)
+			end
+		end
+	end
 	
 	if defaultVariables then
 		Output.showWarning()
@@ -187,6 +248,15 @@ function Output.chunkText(text)
 	return chunks
 end
 
+function Output.sizeAndMove(w, h, x, y)
+	guiSetSize(Output.gui.wndMain, w, h, false)
+	-- trigger this event to force all the child elements to reposition properly
+	triggerEvent("onClientGUISize", Output.gui.wndMain)
+	
+	if x and y then
+		guiSetPosition(Output.gui.wndMain, x, y, false)
+	end
+end
 
 --[[
 addEventHandler("onClientKey", root,

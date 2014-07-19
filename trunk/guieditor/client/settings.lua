@@ -24,6 +24,7 @@ Settings = {
 		
 		load_code_parse_calculations = {value = true, type = "boolean"},
 		
+		output_window_autosize = {value = true, type = "boolean"},
 		-- either implement these or add them to the depreciated list
 		--screen_output_type = {value = false, type = "boolean"}
 		--child_output_type = {value = false, type = "boolean"}
@@ -54,7 +55,7 @@ end
 --]]--------------------------------------------------
 
 function Settings.createGUI()
-	Settings.gui.wndMain = guiCreateWindow((gScreen.x - 280) / 2, (gScreen.y - 280) / 2, 280, 280, "Settings", false)
+	Settings.gui.wndMain = guiCreateWindow((gScreen.x - 280) / 2, (gScreen.y - 280) / 2, 280, 320, "Settings", false)
 	guiWindowSetSizable(Settings.gui.wndMain, false)
 	guiWindowTitlebarButtonAdd(Settings.gui.wndMain, "Cancel", "right", Settings.closeGUI)
 	guiWindowTitlebarButtonAdd(Settings.gui.wndMain, "Save", "left", Settings.saveGUI)
@@ -286,6 +287,25 @@ function Settings.createGUI()
 	guiSetProperty(Settings.gui.imgLoadCodeAreaTop, "ImageColours", string.format("tl:FF%s tr:00%s bl:FF%s br:00%s", unpack(gAreaColours.primaryPacked)))
 	guiSetProperty(Settings.gui.imgLoadCodeAreaBottom, "ImageColours", string.format("tl:FF%s tr:00%s bl:FF%s br:00%s", unpack(gAreaColours.primaryPacked)))	
 	
+	--[[--------------------------------------------------
+		output window autosize
+	--]]--------------------------------------------------
+	Settings.gui.chkOutputWindowAutosize = guiCreateCheckBox(20, 280, 230, 20, "Automatically size output window", toBool(Settings.loaded.load_code_parse_calculations.value), false, Settings.gui.wndMain)
+	
+	Settings.gui.lblOutputWindowAutosizeCrush = guiCreateLabel(250, 280, 20, 20, "<<", false, Settings.gui.wndMain)
+	setRolloverColour(Settings.gui.lblOutputWindowAutosizeCrush, gColours.primary, gColours.defaultLabel)
+
+	Settings.gui.lblOutputWindowAutosizeHelp = guiCreateLabel(20, 275, 0, 30, "Attempt to automatically resize the\ncode output window to fit code length.", false, Settings.gui.wndMain)
+	guiLabelSetVerticalAlign(Settings.gui.lblOutputWindowAutosizeHelp, "center")
+	setCrushToggle(Settings.gui.lblOutputWindowAutosizeCrush, 290, 230, Settings.gui.chkOutputWindowAutosize, Settings.gui.lblOutputWindowAutosizeHelp)
+	
+	Settings.gui.imgOutputWindowAreaLeft = guiCreateStaticImage(10, 275, 1, 30, "images/dot_white.png", false, Settings.gui.wndMain)
+	Settings.gui.imgOutputWindowAreaTop = guiCreateStaticImage(10, 275, 260, 1, "images/dot_white.png", false, Settings.gui.wndMain)
+	Settings.gui.imgOutputWindowAreaBottom = guiCreateStaticImage(10, 305, 260, 1, "images/dot_white.png", false, Settings.gui.wndMain)
+	guiSetProperty(Settings.gui.imgOutputWindowAreaLeft, "ImageColours", string.format("tl:FF%s tr:FF%s bl:FF%s br:FF%s", unpack(gAreaColours.primaryPacked)))
+	guiSetProperty(Settings.gui.imgOutputWindowAreaTop, "ImageColours", string.format("tl:FF%s tr:00%s bl:FF%s br:00%s", unpack(gAreaColours.primaryPacked)))
+	guiSetProperty(Settings.gui.imgOutputWindowAreaBottom, "ImageColours", string.format("tl:FF%s tr:00%s bl:FF%s br:00%s", unpack(gAreaColours.primaryPacked)))	
+	
 	
 	guiSetVisible(Settings.gui.wndMain, false)
 	doOnChildren(Settings.gui.wndMain, setElementData, "guieditor.internal:noLoad", true)
@@ -302,6 +322,7 @@ function Settings.closeGUI()
 	guiSetText(Settings.gui.lblSnappingInfluenceEdit, tostring(Settings.loaded.snapping_influence.value))
 	guiSetText(Settings.gui.lblSnappingOffsetEdit, tostring(Settings.loaded.snapping_recommended.value))	
 	guiCheckBoxSetSelected(Settings.gui.chkLoadCodeCalculations, toBool(Settings.loaded.load_code_parse_calculations.value))
+	guiCheckBoxSetSelected(Settings.gui.chkOutputWindowAutosize, toBool(Settings.loaded.output_window_autosize.value))
 	
 	Snapping.updateValues()
 end
@@ -333,6 +354,8 @@ function Settings.saveGUI()
 	Settings.loaded.position_code_movement_warning.value = guiCheckBoxGetSelected(Settings.gui.chkPositionCodeMovementWarning)
 	
 	Settings.loaded.load_code_parse_calculations.value = guiCheckBoxGetSelected(Settings.gui.chkLoadCodeCalculations)
+	
+	Settings.loaded.output_window_autosize.value = guiCheckBoxGetSelected(Settings.gui.chkOutputWindowAutosize)
 	
 	Settings.saveFile()
 	

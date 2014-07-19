@@ -237,7 +237,9 @@ function DX_Element:setWidth(value, ignoreUndo)
 		
 		self.width = tonumber(value) or self.width
 		
-		guiSetSize(self.element, self.width, self.height, false)
+		if self.width and self.height then
+			guiSetSize(self.element, self.width, self.height, false)
+		end
 	end
 end
 
@@ -268,7 +270,9 @@ function DX_Element:setHeight(value, ignoreUndo)
 		
 		self.height = tonumber(value) or self.height
 		
-		guiSetSize(self.element, self.width, self.height, false)
+		if self.width and self.height then
+			guiSetSize(self.element, self.width, self.height, false)
+		end
 	end
 end
 

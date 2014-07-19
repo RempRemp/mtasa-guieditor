@@ -104,6 +104,8 @@ function setupGUIElement(element, ...)
 		if getElementData(element, "guieditor.internal:needsTab") then
 			-- tabpanels without any tabs on do not capture any mouse events
 			-- so we have to put a tab on when we create the tab panel
+			-- 19/07/14 - that is now actually fixed, but mta now forces tabs onto empty tabpanels (very inconsistently..?)
+			-- so set one up ourselves to stop it having a silly tab name
 			local tab = createGUIElementFromType("tab", nil, nil, nil, nil, nil, element)
 			setupGUIElement(tab)
 		end
@@ -123,20 +125,21 @@ function setupGUIElement(element, ...)
 		gRightClickHack[redirect] = true		
 		setElementData(element, "guieditor.internal:mask", redirect)
 		setElementData(redirect, "guieditor.internal:redirect", element)	
-		setElementData(redirect, "guieditor.internal:noLoad", true)
-	elseif elementType == "scrollpane" then
+		setElementData(redirect, "guieditor.internal:noLoad", true)	
+	elseif elementType == "scrollpane" then	
 		local redirect = guiCreateLabel(0, 0, 1, 1, "", true, element)
 		setElementData(element, "guieditor.internal:mask", redirect)
 		setElementData(redirect, "guieditor.internal:redirect", element)
 		setElementData(redirect, "guieditor.internal:noLoad", true)		
 	elseif elementType == "combobox" then
+		--[[
 		local redirect = guiCreateLabel(0, 0, 1, 1, "", true, element)
 		guiSetProperty(redirect, "MousePassThroughEnabled", "True")
 		gRightClickHack[redirect] = true
 		setElementData(element, "guieditor.internal:mask", redirect)
 		setElementData(redirect, "guieditor.internal:redirect", element)	
 		setElementData(redirect, "guieditor.internal:noLoad", true)
-		
+		]]
 	elseif elementType == "dx_line" then
 		guiSetProperty(element, "MousePassThroughEnabled", "True")
 	elseif elementType == "dx_rectangle" then
@@ -239,24 +242,24 @@ function createGUIElementFromType(elementType, x, y, w, h, relative, parent, ...
 	elseif elementType == "dx_line" then
 		element = guiCreateLabel(x, y, w, h, "", false, parent)
 		guiSetProperty(element, "MousePassThroughEnabled", "True")
-		local dx = DX_Line:create(x, y, x + w, y + h, {255, 255, 255, 255}, 1, true, element)
+		local dx = DX_Line:create(x, y, x + w, y + h, {255, 255, 255, 255}, 1, false, element)
 		setElementData(element, "guieditor.internal:dxElement", dx.id)
 	elseif elementType == "dx_rectangle" then
 		element = guiCreateLabel(x, y, w, h, "", false, parent)
 		guiSetProperty(element, "MousePassThroughEnabled", "True")
-		local dx = DX_Rectangle:create(x, y, w, h, {255, 255, 255, 255}, true, element)
+		local dx = DX_Rectangle:create(x, y, w, h, {255, 255, 255, 255}, false, element)
 		setElementData(element, "guieditor.internal:dxElement", dx.id)
 	elseif elementType == "dx_image" then
 		element = guiCreateLabel(x, y, w, h, "", false, parent)
 		guiSetProperty(element, "MousePassThroughEnabled", "True")
-		local dx = DX_Image:create(x, y, w, h, args[1], 0, 0, 0, {255, 255, 255, 255}, true, element)
+		local dx = DX_Image:create(x, y, w, h, args[1], 0, 0, 0, {255, 255, 255, 255}, false, element)
 		setElementData(element, "guieditor.internal:dxElement", dx.id)
 		setElementData(element, "guieditor:imagePath", args[1])
 		setElementData(element, "guieditor:imageSize", args[2])
 	elseif elementType == "dx_text" then
 		element = guiCreateLabel(x, y, w, h, "", false, parent)
 		guiSetProperty(element, "MousePassThroughEnabled", "True")
-		local dx = DX_Text:create("", x, y, w, h, {255, 255, 255, 255}, 1, "default", "left", "top", false, false, true, false, false, element)
+		local dx = DX_Text:create("", x, y, w, h, {255, 255, 255, 255}, 1, "default", "left", "top", false, false, false, false, false, element)
 		setElementData(element, "guieditor.internal:dxElement", dx.id)
 	end
 	
@@ -273,6 +276,10 @@ function copyGUIElement(element, silent, parent, ...)
 	local x, y = guiGetPosition(element, false)
 	local w, h = guiGetSize(element, false)
 	parent = parent or guiGetParent(element)
+	
+	if exists(parent) and getElementType(parent) == "guiroot" then
+		parent = nil
+	end
 	
 	local creationArgs = {}
 	
@@ -446,6 +453,8 @@ function copyGUIElement(element, silent, parent, ...)
 		action.description = "Copy " .. stripGUIPrefix(getElementType(copy))
 		
 		UndoRedo.add(action)
+		
+		Mover.add(copy)
 	end
 	
 	return copy

@@ -22,7 +22,7 @@ function getElementVariable(element)
 	if getElementData(element, "guieditor:variable") then
 		return getElementData(element, "guieditor:variable")
 	end
-	
+
 	return getElementData(element, "guieditor:variablePlaceholder"), true
 end
 

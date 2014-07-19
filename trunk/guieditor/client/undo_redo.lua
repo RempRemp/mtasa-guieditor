@@ -102,6 +102,10 @@ function UndoRedo.undo()
 			end		
 		end
 		
+		if action.description then
+			ContextBar.add("Undo: " .. action.description)
+		end
+		
 		UndoRedo.remove()
 	else
 		ContextBar.add("There are no more actions to undo")
@@ -126,6 +130,10 @@ function UndoRedo.redo()
 		end
 		
 		UndoRedo.add(action)
+		
+		if action.description then
+			ContextBar.add("Redo: " .. action.description)
+		end
 		
 		table.remove(UndoRedo.redoList, 1)
 	else
@@ -187,7 +195,7 @@ function UndoRedo.generateActionUndo(actionType, element, action)
 	elseif actionType == UndoRedo.presets.delete then
 		--action[#action + 1] = {}
 		
-		action[#action] = {ufunc = guiRestore, uvalues = {element}, rfunc = guiRemove, rvalues = {element}, __destruct = {ufunc = guiDelete, urvalues = {element}}--[[, dependancies = {element}]]}
+		action[#action] = {ufunc = guiRestore, uvalues = {element}, rfunc = guiRemove, rvalues = {element}, __destruct = {ufunc = guiDelete, uvalues = {element}}--[[, dependancies = {element}]]}
 		
 		action.description = "Delete " .. stripGUIPrefix(getElementType(element))
 		
@@ -240,7 +248,7 @@ function UndoRedo.generateActionRedo(actionType, element, action)
 	elseif actionType == UndoRedo.presets.delete then
 		--action[#action + 1] = {}
 		
-		action[#action] = {ufunc = guiRestore, uvalues = {element}, rfunc = guiRemove, rvalues = {element}, __destruct = {ufunc = guiDelete, urvalues = {element}}--[[, dependancies = {element}]]}
+		action[#action] = {ufunc = guiRestore, uvalues = {element}, rfunc = guiRemove, rvalues = {element}, __destruct = {ufunc = guiDelete, uvalues = {element}}--[[, dependancies = {element}]]}
 		UndoRedo.add(action)		
 	end
 	
@@ -309,7 +317,7 @@ function UndoRedo.join(primary, secondary)
 	return action
 end
 
-
+-- called when an item is permanently removed from the undo/redo stack
 function UndoRedo.processDestructor(action, t)
 	if action then
 		outputDebug("processing destructor "..tostring(action), "UNDO_REDO")
