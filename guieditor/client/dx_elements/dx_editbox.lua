@@ -41,6 +41,7 @@ function DX_Editbox:create(x, y, w, h, text)
 			textColour = {255, 255, 255, 255},
 			backgroundEditColour = {255, 255, 255, 50},
 			highlightColour = {255, 255, 255, 50},
+			hoverColour = {120, 120, 120, 50},
 			caratColour = {0, 0, 200, 255},
 			caratBlink = 0,
 			filter = gFilters.characters,
@@ -268,7 +269,7 @@ end
 
 
 function DX_Editbox:draw()
-	if self:visible() then		
+	if self:visible() then	
 		if self.edit then
 			dxDrawRectangle(self.edit.x, self.edit.y, self.edit.w, self.edit.h, tocolor(unpack(self.backgroundEditColour)), self.postGUI)
 
@@ -277,6 +278,11 @@ function DX_Editbox:draw()
 			if self.edit.x + w <= self.x + self.width then
 				dxDrawLine(0,0,0,0, tocolor(255, 255, 255, 255), 0)
 				dxDrawLine(self.edit.x + w, self.edit.y, self.edit.x + w, self.edit.y + self.edit.h, tocolor(unpack(self.caratColour)), 2, self.postGUI)				
+			end
+		else 
+			if self.hovered and self:enabled() then
+				local x, y, w, h = self:getEditableTextDimensions()
+				dxDrawRectangle(x, y, w, h, tocolor(unpack(self.hoverColour)), self.postGUI)
 			end
 		end		
 				
@@ -547,9 +553,11 @@ addEventHandler("onClientClick", root,
 								
 								if (width - (charWidth / 2)) > diff then
 									editbox.edit.carat = i - 1
+									editbox:setCaratBlink(255)
 									break
 								else
 									editbox.edit.carat = i 
+									editbox:setCaratBlink(255)
 									break
 								end
 							end
@@ -576,14 +584,16 @@ addEventHandler("onClientCursorMove", root,
 		if not gEnabled then
 			return
 		end
-	
+
 		for _,editbox in ipairs(DX_Editbox.instances) do
-			if editbox.dragging and editbox.edit then	
-				if editbox.dragging.tick < (getTickCount() - 100) then
-					local x, y, w, h = editbox:getEditableTextDimensions()
-											
-					if absoluteX > x and absoluteX < (x + w) and
-						absoluteY > y and absoluteY < (y + h) then
+			if editbox:visible() then
+				local x, y, w, h = editbox:getEditableTextDimensions()
+										
+				if absoluteX > x and absoluteX < (x + w) and
+					absoluteY > y and absoluteY < (y + h) then
+					editbox.hovered = true
+					
+					if editbox.edit and editbox.dragging and editbox.dragging.tick < (getTickCount() - 100) then
 						local diff = absoluteX - x
 						
 						for i = 1, #editbox.edit.text do
@@ -604,6 +614,8 @@ addEventHandler("onClientCursorMove", root,
 							end
 						end	
 					end
+				else
+					editbox.hovered = false
 				end
 			end
 		end

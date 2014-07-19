@@ -10,13 +10,13 @@
 function Tutorial.constructors.main()
 	local t = Tutorial:create("main", "Tutorial", true)
 	
-	local pageIntro = t:addPage("Introduction to the GUI Editor", [[The GUI Editor is a tool to help with the design and creation of GUI interfaces.
+	local pageIntro = t:addPage("Introduction to the GUI Editor", [[The GUI Editor is a tool to help with the design and creation of GUI.
 	
 	It allows you to visually create GUI elements, moving and sizing them as you see fit. It presents easy ways for you to manage the various attributes and properties that each element type has, like text and colour.
 	
 	When your design is finished, it can output your design in Lua code ready for inclusion in your resource scripts.
 	
-	Things you have previously created can also be loaded into the GUI Editor for further changes.
+	Things you have previously made can also be loaded into the GUI Editor for further changes.
 	]])
 	
 	local pageTutorial = t:addPage("Tutorial", [[This tutorial will overview the basic functions of the GUI editor.

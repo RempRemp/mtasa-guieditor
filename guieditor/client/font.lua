@@ -31,12 +31,60 @@ FontPicker = {
 	width = 440,
 	height = 280,
 	defaultFontSize = 10,
+	-- fonts that are used in the font picker display, necessary because the actual fonts in gCustomFonts can change size
+	displayFonts = {},
 	
 	refreshAll = 
 		function()
 			for _,picker in ipairs(FontPicker.instances) do
-				picker:loadFonts()
+				picker:loadCustomFonts()
 			end
+		end,
+		
+	syncDisplayFonts = 
+		function()
+			for font,data in pairs(gCustomFonts) do
+				local found = false
+				
+				for f,d in pairs(FontPicker.displayFonts) do
+					if data.name == d.name then
+						found = true
+						break
+					end
+				end
+				
+				if not found then
+					local newFont = guiCreateFont(data.path, FontPicker.defaultFontSize)
+					FontPicker.displayFonts[newFont] = {name = data.name, path = data.path}
+				end
+			end
+		end,
+		
+	fontNameFromPath = 
+		function(path, includeExtension)
+			if type(path) ~= "string" then
+				return ""
+			end
+			
+			local fontName = string.reverse(path)
+			
+			local s = fontName:find("\\", 0, true) or fontName:find("/", 0, true)
+			
+			if s then
+				fontName = fontName:sub(0, s - 1)
+			end
+			
+			if not includeExtension then
+				s = fontName:find(".", 0, true)
+				
+				if s then
+					fontName = fontName:sub(s + 1)
+				end
+			end
+			
+			fontName = string.reverse(fontName)
+
+			return fontName
 		end
 }
 
@@ -356,16 +404,18 @@ function FontPicker:showCustom()
 	addEventHandler("onClientGUIClick", self.custom.btnLoad, 
 		function(button, state)
 			if button == "left" and state == "up" then
-				local fontName = string.reverse(guiGetText(self.custom.edtInput))
+				-- skip the reference, gets referenced when the window is closed
+				local f, fontName = self:getOrCreateFont(guiGetText(self.custom.edtInput), nil, true)
 				
-				local s = fontName:find("\\", 0, true) or fontName:find("/", 0, true)
-				
-				if s then
-					fontName = fontName:sub(0, s - 1)
+				if f ~= nil then
+					guiSetText(self.custom.lblResult, "Successfully loaded font '" .. fontName .. "'")
+				else
+					guiSetText(self.custom.lblResult, "Failed to load font '" .. fontName .. "' - invalid file path.")
 				end
-				
-				fontName = string.reverse(fontName)
-				
+			
+			--[[
+				local fontName = self:fontNameFromPath(guiGetText(self.custom.edtInput))
+
 				local f = guiCreateFont(guiGetText(self.custom.edtInput), FontPicker.defaultFontSize)
 				
 				if f then
@@ -387,6 +437,7 @@ function FontPicker:showCustom()
 				else
 					guiSetText(self.custom.lblResult, "Failed to load font '" .. fontName .. "' - invalid file path.")
 				end
+			]]
 			end
 		end
 	, false)
@@ -396,7 +447,7 @@ function FontPicker:showCustom()
 	
 	self.custom.fonts = {}
 	
-	self:loadFonts()
+	self:loadCustomFonts()
 end
 
 
@@ -427,7 +478,7 @@ function FontPicker:hideCustom()
 end
 
 
-function FontPicker:loadFonts()
+function FontPicker:loadCustomFonts()
 	if not self.custom then
 		return
 	end
@@ -444,7 +495,9 @@ function FontPicker:loadFonts()
 	
 	self.custom.fonts = {}
 	
-	for font, data in pairs(gCustomFonts) do
+	FontPicker.syncDisplayFonts()
+	
+	for font, data in pairs(FontPicker.displayFonts) do
 		self.custom.fonts[#self.custom.fonts + 1] = {}
 		
 		self.custom.fonts[#self.custom.fonts].lblInfo = guiCreateLabel(10, y, self.baseWidth - 10, 15, "Loaded custom font: " .. data.name, false, self.custom.scroller)
@@ -458,7 +511,7 @@ function FontPicker:loadFonts()
 		addEventHandler("onClientGUIClick", self.custom.fonts[#self.custom.fonts].lblInfo,
 			function(button, state)
 				if button == "left" and state == "up" then
-					self:close(font, data.path)
+					self:close(data.name, data.path)
 				end
 			end
 		, false)
@@ -481,13 +534,26 @@ function FontPicker:loadFonts()
 	end
 end
 
+function FontPicker:close(pickedFontName, fontPath)
+	local pickedFont
 
-function FontPicker:close(picked, path)
-	if self.onClose then
-		self.onClose(picked)
+	if pickedFontName then
+		if table.find(gFonts, pickedFontName) or table.find(gDXFonts, pickedFontName) then
+			pickedFont = pickedFontName
+		else
+			pickedFont, _, justCreated = self:getOrCreateFont(fontPath, FontPicker.defaultFontSize)
+			
+			if not justCreated then
+				gCustomFonts[pickedFont].refs = gCustomFonts[pickedFont].refs + 1
+			end
+		end
 	end
-
-	if self.element and picked then
+	
+	if self.onClose then
+		self.onClose(pickedFont)
+	end
+	
+	if self.element and pickedFont then
 		local action = {}
 		action[#action + 1] = {}
 		
@@ -500,19 +566,24 @@ function FontPicker:close(picked, path)
 					action[#action].ufunc = DX_Text.font
 					action[#action].uvalues = {dx, dx.font_}
 					action[#action].rfunc = DX_Text.font
-					action[#action].rvalues = {dx, picked}		
+					action[#action].rvalues = {dx, pickedFont}		
 					
 					action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." font"
 
-					if path then
-						local f = dxCreateFont(path, FontPicker.defaultFontSize)
+					if fontPath then
+						local f = dxCreateFont(fontPath, FontPicker.defaultFontSize)
 						
 						if f then
-							dx:font(f, path, FontPicker.defaultFontSize)
-							action[#action].rvalues = {dx, f, path, FontPicker.defaultFontSize}		
+							dx:font(f, fontPath, FontPicker.defaultFontSize)
+							action[#action].rvalues = {dx, f, fontPath, FontPicker.defaultFontSize}	
+							
+							-- if the font is a font element, remove the ref we just added (since dx doesn't use the gui fonts)
+							if isElement(pickedFont) then
+								gCustomFonts[pickedFont].refs = gCustomFonts[pickedFont].refs - 1
+							end
 						end
 					else
-						dx:font(picked)
+						dx:font(pickedFont)
 					end
 					
 					UndoRedo.add(action)	
@@ -528,14 +599,14 @@ function FontPicker:close(picked, path)
 			action[#action].ufunc = guiSetFont
 			action[#action].uvalues = {self.element, font}
 			action[#action].rfunc = guiSetFont
-			action[#action].rvalues = {self.element, picked}
+			action[#action].rvalues = {self.element, pickedFont}
 
 			action.description = "Set "..stripGUIPrefix(getElementType(self.element)).." font"
 			UndoRedo.add(action)
-			
-			guiSetFont(self.element, picked)
-			
-			setElementData(self.element, "guieditor:font", path)
+
+			guiSetFont(self.element, pickedFont)
+
+			setElementData(self.element, "guieditor:font", fontPath)
 			setElementData(self.element, "guieditor:fontSize", 10)
 		end
 	end
@@ -556,6 +627,83 @@ function FontPicker:close(picked, path)
 	
 	self = nil
 end
+
+--[[
+function FontPicker:close(pickedFont, fontPath)
+	if self.onClose then
+		self.onClose(pickedFont)
+	end
+
+	if self.element and pickedFont then
+		local action = {}
+		action[#action + 1] = {}
+		
+		if self.dx then
+			if getElementData(self.element, "guieditor.internal:dxElement") then
+				local dx = DX_Element.getDXFromElement(self.element)
+				
+				if dx.dxType then
+					action[#action + 1] = {}
+					action[#action].ufunc = DX_Text.font
+					action[#action].uvalues = {dx, dx.font_}
+					action[#action].rfunc = DX_Text.font
+					action[#action].rvalues = {dx, pickedFont}		
+					
+					action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." font"
+
+					if fontPath then
+						local f = dxCreateFont(fontPath, FontPicker.defaultFontSize)
+						
+						if f then
+							dx:font(f, fontPath, FontPicker.defaultFontSize)
+							action[#action].rvalues = {dx, f, fontPath, FontPicker.defaultFontSize}		
+						end
+					else
+						dx:font(pickedFont)
+					end
+					
+					UndoRedo.add(action)	
+				end		
+			end
+		else
+			local name, font = guiGetFont(self.element)
+			
+			if font == nil then
+				font = name
+			end
+			
+			action[#action].ufunc = guiSetFont
+			action[#action].uvalues = {self.element, font}
+			action[#action].rfunc = guiSetFont
+			action[#action].rvalues = {self.element, pickedFont}
+
+			action.description = "Set "..stripGUIPrefix(getElementType(self.element)).." font"
+			UndoRedo.add(action)
+			
+			guiSetFont(self.element, pickedFont)
+			
+			setElementData(self.element, "guieditor:font", fontPath)
+			setElementData(self.element, "guieditor:fontSize", 10)
+		end
+	end
+	
+	if self.custom then
+		destroyElement(self.custom.base)
+		destroyElement(self.custom.browser)
+	end	
+	
+	destroyElement(self.window)
+	
+	for i,picker in ipairs(FontPicker.instances) do
+		if self == picker then
+			table.remove(FontPicker.instances, i)
+			break
+		end
+	end
+	
+	self = nil
+end
+]]
 
 
 function FontPicker:setFontSize(element, size)
@@ -601,6 +749,17 @@ function FontPicker:setFontSize(element, size)
 					action[2].rvalues[2] = newFont
 				end
 				
+				--[[
+				for f,_ in pairs(gCustomFonts) do
+					if f == font then
+						gCustomFonts[font] = nil
+						break
+					end
+				end
+				
+				gCustomFonts[newFont] = {name = self:fontNameFromPath(fontPath), path = fontPath, size = size}
+				]]
+				
 				destroyElement(font)
 				font = nil
 			end
@@ -608,14 +767,9 @@ function FontPicker:setFontSize(element, size)
 	-- regular gui
 	else			
 		local _, font = guiGetFont(element)
-		
-		if not exists(font) then
-			return
-		end
-		
 		local fontPath = getElementData(element, "guieditor:font")
 		
-		if not fontPath then
+		if not exists(font) or not fontPath then
 			return
 		end
 		
@@ -625,7 +779,13 @@ function FontPicker:setFontSize(element, size)
 			return
 		end
 		
-		local newFont = guiCreateFont(fontPath, size)
+		
+		local newFont, _, justCreated = self:getOrCreateFont(fontPath, size)
+		--local newFont = guiCreateFont(fontPath, size)
+		
+		if not justCreated then
+			gCustomFonts[newFont].refs = gCustomFonts[newFont].refs + 1
+		end
 		
 		if newFont then
 			guiSetFont(element, newFont)
@@ -642,10 +802,69 @@ function FontPicker:setFontSize(element, size)
 				action[1].rvalues[2] = newFont
 			end
 			
-			destroyElement(font)
-			font = nil
+			-- if the old font has no refs left, destroy it
+			for f,_ in pairs(gCustomFonts) do
+				if f == font then
+					gCustomFonts[font].refs = gCustomFonts[font].refs - 1
+					
+					if gCustomFonts[font].refs <= 0 then
+						gCustomFonts[font] = nil
+						
+						destroyElement(font)
+						font = nil
+					end
+					
+					break
+				end
+			end
+			
+			--gCustomFonts[newFont] = {name = self:fontNameFromPath(fontPath), path = fontPath, size = size, refs = 1}
 		end
 	end
+end
+
+--[[
+function FontPicker:fontNameFromPath(path)
+	if type(path) ~= "string" then
+		return ""
+	end
+	
+	local fontName = string.reverse(path)
+	
+	local s = fontName:find("\\", 0, true) or fontName:find("/", 0, true)
+	
+	if s then
+		fontName = fontName:sub(0, s - 1)
+	end
+	
+	fontName = string.reverse(fontName)
+
+	return fontName
+end
+]]
+
+function FontPicker:getOrCreateFont(fontPath, fontSize, skipRef) 
+	local fontName = FontPicker.fontNameFromPath(fontPath)
+	fontSize = fontSize or FontPicker.defaultFontSize
+	
+	-- check for existing fonts that match this exact spec
+	for f,data in pairs(gCustomFonts) do
+		if data.name == fontName and data.size == fontSize then
+			return f, fontName, false
+		end
+	end
+	
+	-- none found, try to make a new one
+	local f = guiCreateFont(fontPath, fontSize)
+	
+	if f then
+		gCustomFonts[f] = {name = fontName, path = fontPath, size = fontSize, refs = skipRef and 0 or 1}
+		FontPicker.refreshAll()
+		
+		return f, fontName, true
+	end
+	
+	return nil, fontName, false
 end
 
 
@@ -676,5 +895,14 @@ addEventHandler("onClientRender", root,
 				end				
 			end
 		end	
+		
+		--[[
+		local i = 0
+		
+		for f,d in pairs(gCustomFonts) do
+			dxDrawText(d.name .. " size " .. d.size .. ": " .. d.refs .. " ref(s)", 10, (gScreen.y / 2) + i)
+			i = i + 15
+		end
+		]]
 	end
 )

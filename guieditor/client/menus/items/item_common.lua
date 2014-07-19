@@ -185,7 +185,7 @@ end
 
 
 function createItem_parent()
-	return MenuItem_Text:create("Parent"):set({itemID = "parent"})
+	return MenuItem_Text:create("Parent Menu"):set({itemID = "parent"})
 end
 
 
@@ -204,7 +204,7 @@ function createItem_font()
 end
 
 function createItem_fontSize()
-	return MenuItem_Slider:create("Font size: %value"):set(
+	return MenuItem_Slider:create("Font size: %value", nil, nil, nil, 150):set(
 		{
 			onClickClose = false, 
 			onDown = UndoRedo.setFontSize, 
@@ -1195,3 +1195,41 @@ function createItem_setComboItemText()
 		}
 	)	
 end
+
+
+function createItem_attachToElement()
+	return MenuItem_Text:create("Attach"):set(
+		{
+			onClick = Attacher.add, 
+			onClickArgs = {"__gui"}, 
+			condition = 
+				function(element)
+					if not exists(element) then
+						return false
+					end
+					
+					return guiGetParent(element) == nil
+				end,
+			conditionArgs = {"__gui"}	
+		}
+	)
+end
+
+function createItem_detachFromElement()
+	return MenuItem_Text:create("Detach"):set(
+		{
+			onClick = Attacher.detach, 
+			onClickArgs = {"__gui"},
+			condition = 
+				function(element)
+					if not exists(element) then
+						return false
+					end
+					
+					return guiGetParent(element) ~= nil
+				end,
+			conditionArgs = {"__gui"}
+		}
+	)
+end
+

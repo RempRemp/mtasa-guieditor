@@ -80,7 +80,7 @@ function Multiple.move(absoluteX, absoluteY)
 				if oX and oY then
 					if not Multiple.inside[e] then
 						Multiple.inside[e] = {x = x + (w / 2), y = y + (h / 2)}
-					end				
+					end	
 				else
 					if Multiple.inside[e] then
 						Multiple.inside[e] = nil

@@ -462,6 +462,24 @@ function string.limit(str, length)
 end
 
 
+function string.firstToUpper(str)
+    return (str:gsub("^%l", string.upper))
+end
+
+function string.lines(str)
+	local t = {}
+	
+	local function helper(line) 
+		table.insert(t, line) 
+		return "" 
+	end
+	
+	helper((str:gsub("(.-)\r?\n", helper)))
+	
+	return t
+end
+
+
 function math.lerp(from, to, t)
     return from + (to - from) * t
 end
@@ -474,6 +492,11 @@ function stripGUIPrefix(s)
 		--outputDebug("Invalid type "..type(s).." in stripGUIPrefix", "GENERAL")
 		return ""
 	end
+end
+
+
+function guiGetFriendlyName(element)
+	return string.firstToUpper(stripGUIPrefix(getElementType(element)))
 end
 
 
@@ -576,6 +599,14 @@ function rectangleOverlap(aX, aY, aW, aH, bX, bY, bW, bH)
 	local yOverlap = valueInRange(aY, bY, bY + bH) or valueInRange(bY, aY, aY + aH)
 	
 	return xOverlap, yOverlap	
+end
+
+
+function pointOverlap(element, x, y)
+	local ex, ey = guiGetAbsolutePosition(element)
+	local w, h = guiGetSize(element, false)
+	
+	return valueInRange(x, ex, ex + w) or valueInRange(y, ey, ey + h)
 end
 
 --[[

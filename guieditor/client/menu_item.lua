@@ -647,7 +647,7 @@ MenuItem_Slider = {}
 
 setmetatable(MenuItem_Slider, {__index = MenuItem})
 
-function MenuItem_Slider:create(text, alignment, font, scale)
+function MenuItem_Slider:create(text, alignment, font, scale, maxValue)
 	local item = MenuItem:create()
 	
 	alignment = alignment or {}
@@ -668,6 +668,10 @@ function MenuItem_Slider:create(text, alignment, font, scale)
 
 	item.slider.onChange = item.onSliderChange
 	item.slider.onChangeArgs = {item}
+	
+	if maxValue and type(maxValue) == "number" then
+		item.slider.maxValue = maxValue
+	end
 
 	item.editbox:setReplacement("%%value", item.getValue, item)
 	item.editbox.filter = gFilters.numberInt
@@ -1226,7 +1230,7 @@ function menuItemClick(button, state, absoluteX, absoluteY)
 	if button == "left" then
 		if state == "down" then
 			for _,item in ipairs(MenuItem.instances) do
-				if item:usable() then
+				if item:usable() and item:visible() then
 					if item.mouseState == Menu.mouseStates.on then
 						item.lockMouse = true
 						item:downHandler()
@@ -1235,7 +1239,7 @@ function menuItemClick(button, state, absoluteX, absoluteY)
 			end			
 		elseif state == "up" then
 			for _,item in ipairs(MenuItem.instances) do
-				if item:usable() then
+				if item:usable() and item:visible() then
 					if item.lockMouse then
 						item.lockMouse = false
 						item:upHandler()

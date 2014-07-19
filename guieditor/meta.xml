@@ -19,6 +19,7 @@
     <script src="client/creator.lua" type="client"/>
     <script src="client/mover.lua" type="client"/>
     <script src="client/sizer.lua" type="client"/>
+    <script src="client/attacher.lua" type="client"/>
 	
     <script src="client/resolution_preview.lua" type="client"/>
     <script src="client/titlebar_button.lua" type="client"/>
@@ -39,7 +40,7 @@
 	<script src="client/image_picker.lua" type="client"/>	
 	<script src="client/expanding_gridlist.lua" type="client"/>	
 	<script src="client/sharing.lua" type="client"/>	
-	
+
 	<script src="client/help.lua" type="client"/>	
 	<file src="client/help_documentation.xml"/>
 	

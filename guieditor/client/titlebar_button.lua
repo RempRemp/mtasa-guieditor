@@ -17,6 +17,7 @@ function guiWindowTitlebarButtonAdd(window, text, alignment, onClick, ...)
 	local offset = getElementData(window, "guieditor:titlebarButton_"..alignment) or 5
 	local w = guiGetSize(window, false)
 	
+	-- don't add a divider before the first item
 	if offset > 10 then
 		local width = dxGetTextWidth(gWindowTitlebarButtons.defaultDivider, 1, "default")
 		local label	= guiCreateLabel(alignment == "left" and offset or w - offset - width, 2, width, 15, gWindowTitlebarButtons.defaultDivider, false, window)
@@ -48,6 +49,12 @@ function guiWindowTitlebarButtonAdd(window, text, alignment, onClick, ...)
 	offset = offset + width + 5
 	
 	local args = {...}
+	
+	for i,v in ipairs(args) do
+		if v == "__self" then
+			args[i] = label
+		end
+	end
 	
 	addEventHandler("onClientGUIClick", label, 
 		function(button, state)

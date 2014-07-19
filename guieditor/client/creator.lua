@@ -164,11 +164,18 @@ function guiGetHoverElement()
 	--return exists(Creator.guiHover) and Creator.guiHover or nil
 	
 	if exists(Creator.guiHover) then
-		if getElementData(Creator.guiHover, "guieditor.internal:redirect") then
-			return getElementData(Creator.guiHover, "guieditor.internal:redirect")
+		local element = Creator.guiHover
+		
+		-- if a masked element has snuck through, target and destroy
+		if getElementData(element, "guieditor.internal:mask") then
+			element = getElementData(element, "guieditor.internal:mask")
 		end
 		
-		return Creator.guiHover
+		if getElementData(element, "guieditor.internal:redirect") then
+			return getElementData(element, "guieditor.internal:redirect")
+		end
+		
+		return element
 	end	
 	
 	return nil

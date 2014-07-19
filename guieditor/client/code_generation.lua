@@ -16,14 +16,18 @@ Generation = {
 	usingBasicCode = false,
 	usingCustomFont = false,
 	usingDefaultVariables = {},
+	elementsUsingDefaultVariables = {},
+	biggestWidth = 0,
 }
 
 
 function Generation.generateCode()
 	Generation.usingDefaultVariables = {}
+	Generation.elementsUsingDefaultVariables = {}
 	Generation.usingScreenSize = false
 	Generation.usingCustomFont = false
 	Generation.usingCustomImage = false
+	Generation.biggestWidth = 0
 	
 	Generation.fonts = {}
 	Generation.dxFonts = {}
@@ -299,7 +303,7 @@ function Generation.generateCode()
 	code = prefix .. code
 	
 	--Output.show(code, tableDeclaration)
-	return code, tableDeclaration
+	return code, table.count(vTables) > 0
 end
 
 
@@ -351,6 +355,14 @@ function Generation.generateElementCode(element)
 		if Generation.usingBasicCode then
 			code = code:gsub("\n", "\n" .. string.rep(Generation.indent, 2))
 		end
+		
+		for i,l in ipairs(string.lines(code)) do
+			local w = dxGetTextWidth(l)
+			
+			if w > Generation.biggestWidth then
+				Generation.biggestWidth = w
+			end
+		end
 	
 		return code
 	end
@@ -391,6 +403,7 @@ function generateCode_common(element)
 	
 	if placeholder then
 		Generation.usingDefaultVariables[elementType] = true
+		Generation.elementsUsingDefaultVariables[#Generation.elementsUsingDefaultVariables + 1] = element
 	else
 		if common.variable:find(".", 0, true) then
 			Generation.variableTables[common.variable] = true
@@ -486,12 +499,14 @@ function generateCode_common(element)
 	if not gDefaults.font[elementType] or guiGetFont(element) ~= gDefaults.font[elementType] then
 		if getElementData(element, "guieditor:font") then
 			local f = getElementData(element, "guieditor:font")
-			local var = Generation.fonts[f] or "font_" .. table.count(Generation.fonts)
+			local fontName = FontPicker.fontNameFromPath(f)
+			local s = tostring(getElementData(element, "guieditor:fontSize") or FontPicker.defaultFontSize)
+			local var = Generation.fonts[f .. s] or "font" .. table.count(Generation.fonts) .. "_" .. fontName
 			
-			if not Generation.fonts[f] then		
-				Generation.fonts[f] = var
+			if not Generation.fonts[f .. s] then		
+				Generation.fonts[f .. s] = var
 					
-				common.fontString = "\nlocal " .. var .. " = guiCreateFont(\"".. f .."\")"
+				common.fontString = "\nlocal " .. var .. " = guiCreateFont(\"".. f .. "\", " .. s .. ")"
 				
 				Generation.usingCustomFont = true
 			end
@@ -614,12 +629,14 @@ function generateCode_commonDX(element, dx, recursive)
 	if not recursive then
 		if dx.font_ and type(dx.font_) ~= "string" then
 			if dx.fontPath and type(dx.fontPath) == "string" then
-				local var = Generation.dxFonts[dx.font_] or "dxfont_" .. table.count(Generation.dxFonts)
+				local fontName = FontPicker.fontNameFromPath(dx.fontPath)
+				local s = tostring(dx.fontSize or FontPicker.defaultFontSize)
+				local var = Generation.dxFonts[fontName .. s] or "dxfont" .. table.count(Generation.dxFonts) .. "_" .. fontName
 					
-				if not Generation.dxFonts[dx.font_] then		
-					Generation.dxFonts[dx.font_] = var
+				if not Generation.dxFonts[fontName .. s] then		
+					Generation.dxFonts[fontName .. s] = var
 							
-					common.fontCreationString = "\nlocal " .. var .. " = dxCreateFont(\"".. dx.fontPath .."\")"
+					common.fontCreationString = "\nlocal " .. var .. " = dxCreateFont(\"".. dx.fontPath .."\", " .. s .. ")"
 						
 					Generation.usingCustomFont = true
 				end
