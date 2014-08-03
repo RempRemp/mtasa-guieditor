@@ -416,6 +416,7 @@ addEventHandler("guieditor:server_checkUpdateStatus", root,
 
 
 function updateResult(name, version, player, automatic)
+	-- 19/07/2014 - this 404s
 	if not (string.lower(name):find("error") or version == 0) then
 		local away = parseVersion(tostring(version))
 		local home = parseVersion(tostring(getResourceInfo(getThisResource(),"version")))

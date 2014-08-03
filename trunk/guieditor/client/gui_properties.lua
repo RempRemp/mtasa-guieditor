@@ -101,6 +101,12 @@ function Properties.create()
 			Properties.currentValue = true
 			
 			local mbox = MessageBox_Info:create(nil, "Current value:\n" .. guiGetProperty(Properties.element, Properties.currentProperty))
+			guiWindowTitlebarButtonAdd(mbox.window, "Copy", "left", 
+				function() 
+					setClipboard(guiGetProperty(Properties.element, Properties.currentProperty)) 
+					ContextBar.add("Property value copied to clipboard")
+				end
+			)
 			mbox.onClose = 
 				function() 
 					Properties.currentValue = false
@@ -393,7 +399,7 @@ function Properties.open(element)
 		ContextBar.add("The properties window is already in use")
 		return
 	end
-	
+
 	if element and exists(element) then
 		Properties.element = element
 	
@@ -406,6 +412,8 @@ function Properties.open(element)
 					setElementData(item, "guieditor:rolloffColour", gColours.secondary)
 					
 					guiSetColour(item, unpack(gColours.secondary))		
+					
+					triggerEvent("onClientGUIClick", Properties.gui.lblElementForwardCrush, "left", "up")
 
 					Properties.loadProperties(guiGetText(item))	
 				else

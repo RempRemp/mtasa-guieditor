@@ -166,7 +166,7 @@ function cacheProperties(element)
 	if not Properties.data.widgets or not Properties.data.widgets[Properties.guiMap[elementType]] then
 		return
 	end
-	
+
 	if not gDefaults.properties[elementType] then
 		gDefaults.properties[elementType] = {}
 	end
