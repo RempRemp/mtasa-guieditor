@@ -1350,7 +1350,13 @@ function LoadCode.create()
 	LoadCode.gui.imgEdge = guiCreateStaticImage(5, 25, 1, 165, "images/dot_white.png", false, LoadCode.gui.wndMain)
 	local r, g, b = unpack(gColours.primary)
 	guiSetColour(LoadCode.gui.imgEdge, r, g, b, 150)
-
+	
+	LoadCode.gui.lblEmpty = guiCreateLabel(0, 0, 400, 165, "No files to load", false, LoadCode.gui.scpMain)
+	guiSetColour(LoadCode.gui.lblEmpty, unpack(gColours.primary))
+	guiLabelSetHorizontalAlign(LoadCode.gui.lblEmpty, "center")
+	guiLabelSetVerticalAlign(LoadCode.gui.lblEmpty, "center")
+	guiSetFont(LoadCode.gui.lblEmpty, "default-bold-small")    
+	
 	guiSetVisible(LoadCode.gui.wndMain, false)
 	doOnChildren(LoadCode.gui.wndMain, setElementData, "guieditor.internal:noLoad", true)
 end	
@@ -1358,6 +1364,10 @@ end
 
 function LoadCode.addItem(name, size)
 	if name and size then
+		if guiGetVisible(LoadCode.gui.lblEmpty) then
+			guiSetVisible(LoadCode.gui.lblEmpty, false)
+		end
+		
 		local friendlySize = (tonumber(size) and size or 0) / 1024
 			
 		if friendlySize > 1024 then

@@ -25,6 +25,12 @@
 		- GUI Editor wiki page
 		- Output in OO format
 		- Document all new changes
+		- Do something with the broken update checker
+		- Resize/move shortcut options (e.g. fit parent size, top left corner, etc)
+		- Pressing enter auto-accepts the colour picker
+		- Preview new colour on element when using the colour picker
+		- Let text alignment options immediately preview on the element when changed
+		- Fix server F2 restart join thing
 		
 	Changes:
 		- Added font size setting
@@ -34,10 +40,13 @@
 		- Fixed xml files being left open on the server
 		- Added highlight colour to editable fields in the right click menus
 		- Made the copy option automatically attach the new copy to the mouse (for element movement)
-		- Detach/attach options to re-parent elements
+		- Added detach/attach options to re-parent elements
 		- Added setting to autosize the code output window to the code content length
 		- Added Maximise/Restore titlebar options to the output window
 		- Added highlight to elements with default variables when the output window warning is clicked
+		- Added copy titlebar button to property "current value" window
+		- Reworked the help documentation window to be less rubbish
+		- Made properties option skip to the relevant properties (rather than landing on the element selection pane)
 --]]--------------------------------------------------
 
 gEnabled = false
@@ -67,6 +76,8 @@ gColours = {
 	
 	defaultLabel = {255, 255, 255},
 	grey = {120, 120, 120},
+	--primaryLight = {255, 153, 145, 255},
+	primaryLight = {237, 126, 119, 255},
 }
 -- primary, secondary, tertiary, quaternary, quinary, senary, septenary, octonary, nonary, and denary
 
@@ -421,6 +432,8 @@ addEventHandler("onClientClick", root,
 		Attacher.click(button, state, absoluteX, absoluteY)
 		
 		Multiple.click(button, state, absoluteX, absoluteY)
+		
+		HelpWindow.click(button, state, absoluteX, absoluteY)
 	end
 )
 

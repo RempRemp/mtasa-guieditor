@@ -44,7 +44,10 @@ function MessageBox:close()
 		self.onClose(unpack(self.onCloseArgs or {}))
 	end
 	
-	destroyElement(self.window)
+	if exists(self.window) then
+		destroyElement(self.window)
+	end
+	
 	self = nil
 end
 

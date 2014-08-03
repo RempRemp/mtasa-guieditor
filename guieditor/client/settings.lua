@@ -55,7 +55,7 @@ end
 --]]--------------------------------------------------
 
 function Settings.createGUI()
-	Settings.gui.wndMain = guiCreateWindow((gScreen.x - 280) / 2, (gScreen.y - 280) / 2, 280, 320, "Settings", false)
+	Settings.gui.wndMain = guiCreateWindow((gScreen.x - 280) / 2, (gScreen.y - 320) / 2, 280, 320, "Settings", false)
 	guiWindowSetSizable(Settings.gui.wndMain, false)
 	guiWindowTitlebarButtonAdd(Settings.gui.wndMain, "Cancel", "right", Settings.closeGUI)
 	guiWindowTitlebarButtonAdd(Settings.gui.wndMain, "Save", "left", Settings.saveGUI)

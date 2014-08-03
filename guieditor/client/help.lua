@@ -9,22 +9,67 @@
 
 HelpWindow = {
 	gui = {},
+	-- currently showing items, changes depending on search
 	items = {},
 	itemsGrouped = {},
+	-- cached list of all items
 	baseItems = {},
 	baseItemsGrouped = {},	
+	searchTimer,
+	defaultTitle = "Help",
+	defaultDescription = [[Click on the text field above to search for help on a topic.
+	
+	Any information relevant to your search will display in the dropdown menu. 
+	
+	Double clicking the item in the menu will load a full description.
+	]]
 }
 
 
 function HelpWindow.create()
-	HelpWindow.gui.wndMain = guiCreateWindow((gScreen.x - 500) / 2, (gScreen.y - 500) / 2, 500, 500, "Help Documentation", false)
+    HelpWindow.gui.wndMain = guiCreateWindow((gScreen.x - 600) / 2, (gScreen.y - 400) / 2, 600, 400, "Help Documentation", false)
 	guiWindowSetSizable(HelpWindow.gui.wndMain, false)
 	guiWindowTitlebarButtonAdd(HelpWindow.gui.wndMain, "Close", "right", HelpWindow.close)
+	guiSetAlpha(HelpWindow.gui.wndMain, 0.90) 
+ 
+	HelpWindow.gui.list = ExpandingGridList:create(10, 27, 580, 0, false, HelpWindow.gui.wndMain)
+	HelpWindow.gui.list:addColumn("Items", 0.95)
+	HelpWindow.gui.list.maxRows = 20
+	guiSetProperty(HelpWindow.gui.list.gridlist, "InheritsAlpha", "False")
 	
-	HelpWindow.gui.edtSearch = guiCreateEdit(10, 25, 185, 20, "Search...", false, HelpWindow.gui.wndMain)
+    HelpWindow.gui.edtSearch = guiCreateEdit(-1, -7, 582, 27, "Search...", false, HelpWindow.gui.list.gridlist)
+  	guiSetProperty(HelpWindow.gui.edtSearch, "InheritsAlpha", "False")
+	guiSetProperty(HelpWindow.gui.edtSearch, "ClippedByParent", "False")
+	guiSetProperty(HelpWindow.gui.edtSearch, "AlwaysOnTop", "True")
+	
+	HelpWindow.gui.lblTitle = guiCreateLabel(10, 48, 580, 20, "", false, HelpWindow.gui.wndMain)
+	guiSetProperty(HelpWindow.gui.lblTitle, "MousePassThroughEnabled", "True")
+	guiSetFont(HelpWindow.gui.lblTitle, "default-bold-small")   
+	guiLabelSetHorizontalAlign(HelpWindow.gui.lblTitle, "center", true)
+	guiLabelSetVerticalAlign(HelpWindow.gui.lblTitle, "bottom")
+	guiSetColour(HelpWindow.gui.lblTitle, unpack(gColours.primary))
+	
+	HelpWindow.gui.imgTitleLeft = guiCreateStaticImage(10, 70, 290, 1, "images/dot_white.png", false, HelpWindow.gui.wndMain)
+	HelpWindow.gui.imgTitleRight = guiCreateStaticImage(300, 70, 290, 1, "images/dot_white.png", false, HelpWindow.gui.wndMain)
+	guiSetProperty(HelpWindow.gui.imgTitleLeft, "ImageColours", string.format("tl:00%s tr:FF%s bl:00%s br:FF%s", unpack(gAreaColours.primaryPacked)))
+	guiSetProperty(HelpWindow.gui.imgTitleRight, "ImageColours", string.format("tl:FF%s tr:00%s bl:FF%s br:00%s", unpack(gAreaColours.primaryPacked)))
+	
+	HelpWindow.gui.lblDescription = guiCreateLabel(10, 73, 580, 317, "", false, HelpWindow.gui.wndMain)
+	guiLabelSetHorizontalAlign(HelpWindow.gui.lblDescription, "center", true)
+	guiLabelSetVerticalAlign(HelpWindow.gui.lblDescription, "top")
+	guiSetProperty(HelpWindow.gui.lblDescription, "MousePassThroughEnabled", "True")
+	
 	addEventHandler("onClientGUIChanged", HelpWindow.gui.edtSearch,
 		function()
-			HelpWindow.search(guiGetText(source))
+			if HelpWindow.searchTimer and isTimer(HelpWindow.searchTimer) then
+				killTimer(HelpWindow.searchTimer)
+			end
+				
+			if guiGetText(source) == "" then
+				HelpWindow.showDefaults()
+			else
+				HelpWindow.searchTimer = setTimer(HelpWindow.search, 400, 1, guiGetText(source))
+			end
 		end
 	, false)
 	addEventHandler("onClientGUIFocus", HelpWindow.gui.edtSearch,
@@ -35,32 +80,36 @@ function HelpWindow.create()
 		end
 	, false)		
 	
-	
-	HelpWindow.gui.list = ExpandingGridList:create(10, 50, 185, 440, false, HelpWindow.gui.wndMain)
-	HelpWindow.gui.list:addColumn("Items")
-	
-	HelpWindow.gui.list.onRowClick = 
-		function(row, col, text, section)
+	HelpWindow.gui.list.onRowDoubleClick = 
+		function(row, col, text, resource, data)
+			HelpWindow.resizeList(true)
+			
 			local description = HelpWindow.items[text].text or "[NO DESCRIPTION]"
-			--[[
-			description = splitLinesForLabel(description, 285)
-			local lines = #description
-			description = table.concat(description, "\n")
-			]]
-			guiSetText(HelpWindow.gui.lblDescription, description:gsub("\\n","\n"))
-			--[[
-			if (lines * 20) > 370 then
-				guiSetSize(HelpWindow.gui.lblDescription, 285, lines * 20, false)
-			else
-				guiSetSize(HelpWindow.gui.lblDescription, 285, 370, false)
-			end
-			]]
+			guiSetText(HelpWindow.gui.lblDescription, description:gsub("\\n","\n") .. "\n\nTags: " .. table.concat(HelpWindow.items[text].tags, ', '))
+			
+			guiSetText(HelpWindow.gui.lblTitle, text)
 		end
-	
-	HelpWindow.gui.scpDescription = guiCreateScrollPane(205, 20, 285, 470, false, HelpWindow.gui.wndMain)
-	HelpWindow.gui.lblDescription = guiCreateLabel(0, 0, 1, 1, "", true, HelpWindow.gui.scpDescription)
-	guiLabelSetHorizontalAlign(HelpWindow.gui.lblDescription, "center", true)
-	guiLabelSetVerticalAlign(HelpWindow.gui.lblDescription, "center")
+		
+	HelpWindow.gui.list.onRowSetText = 
+		function(row, col, text)	
+			local additional
+			
+			if HelpWindow.items[text] then
+				additional = HelpWindow.items[text].text or false
+			end
+			
+			if not additional and HelpWindow.baseItemsGrouped[text] then
+				additional = "Group header"
+			end
+			
+			if additional then
+				guiGridListSetItemTextOverlay(HelpWindow.gui.list.gridlist, row, col, " - " .. additional, false)
+			end
+		end
+		
+	HelpWindow.gui.list.onRowExpand = HelpWindow.resizeList
+	HelpWindow.gui.list.onRowCollapse = HelpWindow.resizeList
+	HelpWindow.gui.list.onPopulated = HelpWindow.resizeList
 
 	guiSetVisible(HelpWindow.gui.wndMain, false)
 	
@@ -75,10 +124,10 @@ function HelpWindow.open()
 	end
 	
 	guiSetText(HelpWindow.gui.edtSearch, "Search...")
-	guiSetText(HelpWindow.gui.lblDescription, "")
+	guiSetText(HelpWindow.gui.lblTitle, HelpWindow.defaultTitle)
+	guiSetText(HelpWindow.gui.lblDescription, HelpWindow.defaultDescription)
 	
-	HelpWindow.itemsGrouped = table.copy(HelpWindow.baseItemsGrouped)
-	HelpWindow.gui.list:setData(HelpWindow.itemsGrouped)	
+	HelpWindow.showDefaults()
 	
 	guiSetVisible(HelpWindow.gui.wndMain, true)
 	guiBringToFront(HelpWindow.gui.wndMain)
@@ -91,6 +140,12 @@ function HelpWindow.close()
 	end
 	
 	guiSetVisible(HelpWindow.gui.wndMain, false)
+end
+
+
+function HelpWindow.showDefaults()
+	HelpWindow.itemsGrouped = table.copy(HelpWindow.baseItemsGrouped)
+	HelpWindow.gui.list:setData(HelpWindow.itemsGrouped)	
 end
 
 
@@ -110,16 +165,19 @@ function HelpWindow.load()
 			HelpWindow.baseItems[name] = {text = description, groups = groups, tags = tags}
 			
 			for k,g in ipairs(groups) do
-				if not HelpWindow.itemsGrouped[g] then
-					HelpWindow.itemsGrouped[g] = {}
+				-- quick fix to ignore the all items group, should really be removed from the xml
+				if g ~= "All Items" then
+					if not HelpWindow.itemsGrouped[g] then
+						HelpWindow.itemsGrouped[g] = {}
+					end
+					
+					if not HelpWindow.baseItemsGrouped[g] then
+						HelpWindow.baseItemsGrouped[g] = {}
+					end			
+					
+					HelpWindow.itemsGrouped[g][ #HelpWindow.itemsGrouped[g] + 1 ] = name
+					HelpWindow.baseItemsGrouped[g][ #HelpWindow.baseItemsGrouped[g] + 1 ] = name
 				end
-				
-				if not HelpWindow.baseItemsGrouped[g] then
-					HelpWindow.baseItemsGrouped[g] = {}
-				end			
-				
-				HelpWindow.itemsGrouped[g][ #HelpWindow.itemsGrouped[g] + 1 ] = name
-				HelpWindow.baseItemsGrouped[g][ #HelpWindow.baseItemsGrouped[g] + 1 ] = name
 			end
 		end
 		
@@ -148,41 +206,84 @@ function HelpWindow.search(text)
 		return
 	end
 
-	local t = table.copy(HelpWindow.baseItemsGrouped)
+	--local t = table.copy(HelpWindow.baseItemsGrouped)
 	text = string.lower(text)
 	
-	for group,items in pairs(t) do 
-		-- if the group name matches exactly, keep everything inside it regardless
-		if string.lower(group) ~= text then
-			for i = #items, 1, -1 do
-				if not string.lower(items[i]):find(text, 0, true) then
-					local found
-
-					for _,tag in ipairs(HelpWindow.baseItems[items[i]].tags or {}) do
-						if string.lower(tag or ""):find(text, 0, true) then
-							found = true
-						end
-					end
-						
-					if not found then
-						table.remove(t[group], i)
-					end
+	local nameMatches = {}
+	local groupMatches = {}
+	local tagMatches = {}
+	
+	for itemName, data in pairs(HelpWindow.baseItems) do
+		if string.lower(itemName) == text then
+			table.insert(nameMatches, 1, itemName)
+		elseif string.contains(string.lower(itemName), text, true) then
+			nameMatches[#nameMatches + 1] = itemName
+		end
+		
+		for _,tag in ipairs(data.tags or {}) do
+			if string.lower(tag or "") == text then
+				if not table.find(tagMatches, itemName) and not table.find(nameMatches, itemName) then
+					table.insert(tagMatches, 1, itemName)
 				end
-			end
-			
-			if #items == 0 then
-				t[group] = nil
+			elseif string.contains(string.lower(tag or ""), text, true) then
+				if not table.find(tagMatches, itemName) and not table.find(nameMatches, itemName) then
+					table.insert(tagMatches, 1, itemName)
+				end				
 			end
 		end
 	end
 	
-	HelpWindow.itemsGrouped = t
-	HelpWindow.gui.list:setData(HelpWindow.itemsGrouped)
+	for groupName, items in pairs(HelpWindow.baseItemsGrouped) do
+		if string.lower(groupName) == text then
+			table.insert(groupMatches, 1, groupName)
+		elseif string.contains(string.lower(groupName), text, true) then
+			groupMatches[#groupMatches + 1] = groupName
+		end
+	end
+	
+
+	local merged = table.merge(table.merge(nameMatches, groupMatches), tagMatches)
+	
+	HelpWindow.itemsGrouped = HelpWindow.baseItemsGrouped
+	HelpWindow.gui.list:setData(HelpWindow.baseItemsGrouped, merged)
 end
 
 
+function HelpWindow.resizeList(hide)
+	if not HelpWindow.gui.wndMain then
+		return
+	end
+	
+	local w, h = guiGetSize(HelpWindow.gui.list.gridlist, false)
+	
+	if hide == true then
+		guiSetSize(HelpWindow.gui.list.gridlist, w, 0, false)
+	else
+		-- 14 is the height of a single row
+		local height = math.min(guiGridListGetRowCount(HelpWindow.gui.list.gridlist), HelpWindow.gui.list.maxRows or 0) * 14
+		
+		local left, top, right, bottom = guiGridListGetBorderWidths(HelpWindow.gui.list.gridlist)
+		
+		guiSetSize(HelpWindow.gui.list.gridlist, w, height + top + bottom, false)
+		
+		guiGridListRepositionOverlays(HelpWindow.gui.list.gridlist)
+	end
+end
 
 
+function HelpWindow.click()
+	if not HelpWindow.gui.wndMain then
+		return
+	end
+	
+	local element = guiGetHoverElement()
+	
+	if not exists(element) or element == HelpWindow.gui.wndMain or element == HelpWindow.gui.lblDescription then
+		HelpWindow.resizeList(true)
+	elseif exists(element) and element == HelpWindow.gui.edtSearch then
+		HelpWindow.resizeList()
+	end
+end
 
 
 -- not used

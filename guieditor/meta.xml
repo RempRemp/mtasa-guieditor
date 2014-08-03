@@ -8,8 +8,10 @@
 	<script src="client/util.lua" type="client"/>
 	<script src="util_common.lua" type="client"/>
 	<script src="util_common.lua" type="server"/>
-	<script src="client/input.lua" type="client"/>
 	
+	<script src="client/extensions/gridlist.lua" type="client"/>	
+	
+	<script src="client/input.lua" type="client"/>
 	<script src="client/settings.lua" type="client"/>
 	
     <script src="client/main.lua" type="client"/>  

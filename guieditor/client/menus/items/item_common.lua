@@ -332,12 +332,12 @@ end
 
 
 function createItem_resizeX()
-	return MenuItem_Text:create("Resize X"):set({onClick = Sizer.add, onClickArgs = {"__gui", true, false}})
+	return MenuItem_Text:create("Resize Width"):set({onClick = Sizer.add, onClickArgs = {"__gui", true, false}})
 end
 
 
 function createItem_resizeY()
-	return MenuItem_Text:create("Resize Y"):set({onClick = Sizer.add, onClickArgs = {"__gui", false, true}})
+	return MenuItem_Text:create("Resize Height"):set({onClick = Sizer.add, onClickArgs = {"__gui", false, true}})
 end
 
 
