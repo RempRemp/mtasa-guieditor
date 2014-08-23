@@ -239,13 +239,18 @@ colorPicker = {
 			return 
 		end
 		
-		if onClose then
+		--if onClose then
 			colorPicker.onClose = onClose
-		end
+		--end
 		
 		colorPicker.onCloseArgs = {...}	
-	
 		
+		colorPicker.onUpdateSelectedValue = nil
+		colorPicker.onUpdateSelectedValueArgs = nil
+		colorPicker.onIgnore = nil
+		colorPicker.onIgnoreArgs = nil
+	
+		bindKey("enter", "down", colorPicker.closeSelect)
 
 		guiSetVisible(colorPicker.GUI.selectWindow, true)
 		guiBringToFront(colorPicker.GUI.selectWindow)
@@ -261,13 +266,23 @@ colorPicker = {
 	closeSelect = function(ignoreChanges)
 		if not colorPicker.isSelectOpen then return end
 
+		if not isBool(ignoreChanges) then
+			ignoreChanges = false
+		end
+		
 		guiSetVisible(colorPicker.GUI.selectWindow, false)
 		removeEventHandler("onClientRender", getRootElement(), colorPicker.updateSelectedValue)
 		removeEventHandler("onClientClick", getRootElement(), colorPicker.pickColor)
 
+		unbindKey("enter", "down", colorPicker.closeSelect)
+		
 		if colorPicker.onClose and not ignoreChanges then
 			colorPicker.onClose(colorPicker.value[1], colorPicker.value[2], colorPicker.value[3], colorPicker.value[4], unpack(colorPicker.onCloseArgs or {}))
 		end		
+		
+		if colorPicker.onIgnore and ignoreChanges then
+			colorPicker.onIgnore(unpack(colorPicker.onIgnoreArgs or {}))
+		end
 		
 		colorPicker.isSelectOpen = false
 
@@ -394,6 +409,10 @@ colorPicker = {
 			dxDrawRectangle(x, y, boxWidth, boxHeight, tocolor(unpack(color)), true)
 		  end
 		end
+		
+		if colorPicker.onUpdateSelectedValue and not ignoreChanges then
+			colorPicker.onUpdateSelectedValue(colorPicker.value[1], colorPicker.value[2], colorPicker.value[3], colorPicker.value[4], unpack(colorPicker.onUpdateSelectedValueArgs or {}))
+		end		
 	end,
 	isCursorInArea = function( cursorX, cursorY, minX, minY, maxX, maxY )
 		if cursorX < minX or cursorX > maxX or

@@ -917,6 +917,10 @@ function MenuItem_Radio:clickHandler(ignoreWarning)
 	if self.menu and self.menu:getParent(true) and Menu.getFromID(self.menu:getParent(true)).guiParent then	
 		guiElement = Menu.getFromID(self.menu:getParent(true)).guiParent
 		
+		if guiElement and not isElement(guiElement) and type(guiElement) == "table" and guiElement.dxType then
+			guiElement = guiElement.element
+		end
+		
 		if not ignoreWarning then
 			if not getElementData(guiElement, "guieditor:relative") and getElementData(guiElement, "guieditor:positionCode") and Settings.loaded.position_code_movement_warning.value then
 				local m = MessageBox_Continue:create("That element is using lua code to calculate its position, changing the output type will overwrite that code.\n\nAre you sure you want to continue?", "Yes", "No")

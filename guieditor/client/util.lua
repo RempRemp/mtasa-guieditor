@@ -163,8 +163,8 @@ end
 --]]--------------------------------------------------
 getElementData_ = getElementData
 function getElementData(element, data, inherit)
-	if not element then
-		outputDebugString("Bad element at getElementData(_, " .. tostring(key) .. ", " .. tostring(value) .. ")")
+	if not exists(element) then
+		outputDebugString("Bad element at getElementData(_, " .. tostring(data) .. ", " .. tostring(inherit) .. ")")
 		return
 	end
 	
@@ -510,7 +510,7 @@ end
 	ie: was it created by the editor, does it exist outside the undo buffer
 --]]--------------------------------------------------
 function relevant(e)
-	if getElementData(e, "guieditor:managed") and 
+	if managed(e) and 
 		not getElementData(e, "guieditor:removed") and 
 		not getElementData(e, "guieditor.internal:noLoad") then
 		return true

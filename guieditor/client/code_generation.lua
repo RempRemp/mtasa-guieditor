@@ -9,10 +9,12 @@
 
 gDecimalPlaces = 2
 gNumberFormat = "%."..tostring(gDecimalPlaces).."f"
+gDXNumberFormat = "%.3f"
 
 Generation = {
 	indent = "    ",
 	usingScreenSize = false,
+	usingScreenSizeForDX = false,
 	usingBasicCode = false,
 	usingCustomFont = false,
 	usingDefaultVariables = {},
@@ -25,6 +27,7 @@ function Generation.generateCode()
 	Generation.usingDefaultVariables = {}
 	Generation.elementsUsingDefaultVariables = {}
 	Generation.usingScreenSize = false
+	Generation.usingScreenSizeForDX = false
 	Generation.usingCustomFont = false
 	Generation.usingCustomImage = false
 	Generation.biggestWidth = 0
@@ -109,6 +112,9 @@ function Generation.generateCode()
 		end
 	end	
 	
+	if Generation.usingScreenSizeForDX and not Generation.usingScreenSize then
+		dxcodePrefix = dxcodePrefix .. "\nlocal screenW, screenH = guiGetScreenSize()"
+	end
 	
 	
 	local prefix, suffix = "", ""
@@ -271,7 +277,7 @@ function Generation.generateCode()
 	prefix = prefix .. variableString
 	
 	
-	if Generation.usingBasicCode then
+	if Generation.usingBasicCode and #code > 0 then
 		prefix = prefix .. (true and "\n" or "") .. "addEventHandler(\"onClientResourceStart\", resourceRoot,\n" .. Generation.indent .. "function()"
 		suffix = Generation.indent .. "\n" .. Generation.indent .. "end\n)"
 	end
@@ -358,7 +364,7 @@ function Generation.generateElementCode(element)
 		
 		for i,l in ipairs(string.lines(code)) do
 			local w = dxGetTextWidth(l)
-			
+
 			if w > Generation.biggestWidth then
 				Generation.biggestWidth = w
 			end
@@ -563,8 +569,15 @@ function generateCode_commonDX(element, dx, recursive)
 	end
 	
 
-	local w, h = guiGetSize(element, getElementData(element, "guieditor:relative"))
-	common.size = w .. ", ".. h
+	--local w, h = guiGetSize(element, getElementData(element, "guieditor:relative"))
+	local w, h = guiGetSize(element, false)
+	
+	if getElementData(element, "guieditor:relative") then
+		common.size = string.format("screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, w / gScreen.x, h / gScreen.y)
+		Generation.usingScreenSizeForDX = true
+	else
+		common.size = w .. ", ".. h
+	end
 
 	if getElementData(element, "guieditor:positionCode") then
 		local w, h = guiGetSize(element, false)
@@ -601,28 +614,85 @@ function generateCode_commonDX(element, dx, recursive)
 		
 		p = p:gsub("parentW", "screenW")
 		p = p:gsub("parentH", "screenH")
-		Generation.usingScreenSize = true		
+		Generation.usingScreenSizeForDX = true		
 		
 		common.position = p
 	else
-		local x, y = guiGetPosition(element, getElementData(element, "guieditor:relative"))
+		local x, y = guiGetPosition(element, false)
 
-		common.position = x .. ", ".. y
+		if getElementData(element, "guieditor:relative") then
+			common.position = string.format("screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, x / gScreen.x, y / gScreen.y)
+			Generation.usingScreenSizeForDX = true			
+		else
+			common.position = x .. ", ".. y
+		end
 		
 		if dx.dxType == gDXTypes.line then
 			common.position = common.position .. ", " .. common.size
 			
-			if dx.anchor == 1 then
-				common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
-			elseif dx.anchor == 2 then
-				common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
-			elseif dx.anchor == 3 then
-				common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
-			elseif dx.anchor == 4 then
-				common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
-			end	
+			--[[
+			1 ------ 2
+			|        |
+			|        |
+			3 ------ 4
+			]]
+				
+			if getElementData(element, "guieditor:relative") then
+				if dx.anchor == 1 then
+					common.position = string.format(
+						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+						x / gScreen.x, 
+						y / gScreen.y,
+						(x + w) / gScreen.x,
+						(y + h) / gScreen.y
+					)
+					--common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
+				elseif dx.anchor == 2 then
+					common.position = string.format(
+						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+						(x + w) / gScreen.x, 
+						y / gScreen.y,
+						x / gScreen.x,
+						(y + h) / gScreen.y
+					)
+					--common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
+				elseif dx.anchor == 3 then
+					common.position = string.format(
+						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+						x / gScreen.x, 
+						(y + h) / gScreen.y,
+						(x + w) / gScreen.x,
+						y / gScreen.y
+					)				
+					--common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
+				elseif dx.anchor == 4 then
+					common.position = string.format(
+						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+						(x + w) / gScreen.x, 
+						(y + h) / gScreen.y,
+						x / gScreen.x,
+						y / gScreen.y
+					)
+					--common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
+				end	
+			else
+				if dx.anchor == 1 then
+					common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
+				elseif dx.anchor == 2 then
+					common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
+				elseif dx.anchor == 3 then
+					common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
+				elseif dx.anchor == 4 then
+					common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
+				end	
+			end
 		elseif dx.dxType == gDXTypes.text then
-			common.size = x + w .. ", " .. y + h			
+			if getElementData(element, "guieditor:relative") then
+				common.size = string.format("screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, (x + w) / gScreen.x, (y + h) / gScreen.y)
+				Generation.usingScreenSizeForDX = true
+			else
+				common.size = x + w .. ", " .. y + h			
+			end
 		end
 	end
 	

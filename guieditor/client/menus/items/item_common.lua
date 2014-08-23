@@ -42,7 +42,14 @@ end
 
 
 function createItem_outputType()
-	local m = MenuItem_Radio:create({"Absolute", "Relative"}, "Output type:"):set({onClickClose = false, onClick = setElementOutputType, onClickArgs = {"__gui", "__self"}, itemID = "outputType"})
+	local m = MenuItem_Radio:create({"Absolute", "Relative"}, "Output type:"):set(
+		{
+			onClickClose = false, 
+			onClick = setElementOutputType, 
+			onClickArgs = {"__gui", "__self"}, 
+			itemID = "outputType"
+		}
+	)
 	m:setSelected(1)
 	
 	return m
@@ -145,7 +152,30 @@ end
 
 
 function createItem_colour()
-	return MenuItem_Text:create("Set colour"):set({onClick = colorPicker.openSelect, onClickArgs = {guiSetColourReverse, "__gui"}})
+	return MenuItem_Text:create("Set colour"):set(
+		{
+			onClick = --colorPicker.openSelect,
+				function(element)
+					setElementData(element, "guieditor.internal:colourCache", {guiGetColour(element)})
+					
+					colorPicker.openSelect()
+					
+					colorPicker.onClose = 
+						function(r, g, b, a, element)
+							guiSetColourClean(element, unpack(getElementData(element, "guieditor.internal:colourCache")))
+							guiSetColourReverse(r, g, b, a, element)
+						end
+					colorPicker.onCloseArgs = {element}
+					
+					colorPicker.onUpdateSelectedValue = guiSetColourReverseClean
+					colorPicker.onUpdateSelectedValueArgs = {element}
+					
+					colorPicker.onIgnore = guiSetColourClean
+					colorPicker.onIgnoreArgs = {element, unpack(getElementData(element, "guieditor.internal:colourCache"))}
+				end,
+			onClickArgs = {"__gui"}
+		}
+	)
 end
 
 
@@ -686,7 +716,25 @@ function createItem_wordwrap()
 end
 
 function createItem_horizontalAlignment()
-	local m = MenuItem_Slider:create("Horizontal align: %value"):set({onClickClose = false, onClick = guiLabelSetHorizontalAlignFromMenu, onClickArgs = {"__gui", "__value"}, itemID = "horizontalAlign"})
+	local m = MenuItem_Slider:create("Horizontal align: %value"):set(
+		{
+			onClickClose = false, 
+			onClick = --guiLabelSetHorizontalAlignFromMenu, 
+				function(element, value, generateAction)
+					guiLabelSetHorizontalAlignFromMenu(element, getElementData(element, "guieditor.internal:alignmentCache"), false)
+					guiLabelSetHorizontalAlignFromMenu(element, value, generateAction)
+				end,
+			onClickArgs = {"__gui", "__value", true}, 
+			onDown = 
+				function(element)
+					setElementData(element, "guieditor.internal:alignmentCache", guiLabelGetHorizontalAlign(element))
+				end,
+			onDownArgs = {"__gui"}, 
+			itemID = "horizontalAlign",
+			onChange = guiLabelSetHorizontalAlignFromMenu, 
+			onChangeArgs = {"__gui", "__value", false}, 
+		}
+	)
 	
 	m.slider.minValue = 1
 	m.slider.maxValue = 3
@@ -713,7 +761,25 @@ function createItem_horizontalAlignment()
 end
 
 function createItem_verticalAlignment()
-	local m = MenuItem_Slider:create("Vertical align: %value"):set({onClickClose = false, onClick = guiLabelSetVerticalAlignFromMenu, onClickArgs = {"__gui", "__value"}, itemID = "verticalAlign"})
+	local m = MenuItem_Slider:create("Vertical align: %value"):set(	
+		{
+			onClickClose = false, 
+			onClick = --guiLabelSetVerticalAlignFromMenu, 
+				function(element, value, generateAction)
+					guiLabelSetVerticalAlignFromMenu(element, getElementData(element, "guieditor.internal:alignmentCache"), false)
+					guiLabelSetVerticalAlignFromMenu(element, value, generateAction)
+				end,
+			onClickArgs = {"__gui", "__value", true}, 
+			onDown = 
+				function(element)
+					setElementData(element, "guieditor.internal:alignmentCache", guiLabelGetVerticalAlign(element))
+				end,
+			onDownArgs = {"__gui"}, 
+			itemID = "verticalAlign",
+			onChange = guiLabelSetVerticalAlignFromMenu, 
+			onChangeArgs = {"__gui", "__value", false}, 
+		}
+	)
 	
 	m.slider.minValue = 1
 	m.slider.maxValue = 3
@@ -930,8 +996,56 @@ function createItem_gridlistItemColour()
 		
 	local m = MenuItem_Text:create("Set colour"):set(
 		{
-			onClick = colorPicker.openSelect, 
-			onClickArgs = {f, "__gui"}
+			--onClick = colorPicker.openSelect, 
+			--onClickArgs = {f, "__gui"}
+			
+			onClick =
+				function(element)
+					local row, col = guiGridListGetSelectedItem(element)
+							
+					if row and col and row ~= -1 and col ~= -1 then
+						setElementData(element, "guieditor.internal:colourCache", {guiGridListGetItemColor(element, row, col)})
+						
+						colorPicker.openSelect(nil, element)
+						
+						colorPicker.onClose = 
+							function(r, g, b, a, element)
+								local row, col = guiGridListGetSelectedItem(element)
+												
+								if row and col and row ~= -1 and col ~= -1 then
+									--guiGridListSetItemColor(element, row, col, unpack(getElementData(element, "guieditor.internal:colourCache")))
+									
+									local action = {}
+									action[#action + 1] = {}
+									local currentR, currentG, currentB, currentA = unpack(getElementData(element, "guieditor.internal:colourCache"))
+									action[#action].ufunc = guiGridListSetItemColor
+									action[#action].uvalues = {element, row, col, currentR, currentG, currentB, currentA}
+									action[#action].rfunc = guiGridListSetItemColor
+									action[#action].rvalues = {element, row, col, r, g, b, a}
+									
+									action.description = "Set "..stripGUIPrefix(getElementType(element)).." item colour (row: "..tostring(row)..", col: "..tostring(col)..")"
+									UndoRedo.add(action)
+									
+									guiGridListSetItemColor(element, row, col, r, g, b, a)
+								end		
+							end
+						colorPicker.onCloseArgs = {element}
+						
+						colorPicker.onUpdateSelectedValue = f
+						colorPicker.onUpdateSelectedValueArgs = {element}
+						
+						colorPicker.onIgnore = 
+							function(element)
+								local row, col = guiGridListGetSelectedItem(element)
+												
+								if row and col and row ~= -1 and col ~= -1 then
+									guiGridListSetItemColor(element, row, col, unpack(getElementData(element, "guieditor.internal:colourCache")))
+								end			
+							end
+						colorPicker.onIgnoreArgs = {element}
+					end
+				end,
+			onClickArgs = {"__gui"}
 		}
 	)
 	

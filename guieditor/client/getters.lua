@@ -63,7 +63,22 @@ function guiSetColourReverse(r, g, b, a, element)
 	
 	guiSetColour(element, r, g, b, a)
 end
+function guiSetColourReverseClean(r, g, b, a, element)
+	if getElementData(element, "guieditor.internal:dxElement") then
+		local dx = DX_Element.ids[getElementData(element, "guieditor.internal:dxElement")]
+		
+		if dx.dxType then
+			dx:colour(r, g, b, a)
+		end
+		
+		return
+	end
 
+	guiSetColour(element, r, g, b, a)
+end
+function guiSetColourClean(element, r, g, b, a)
+	guiSetColourReverseClean(r, g, b, a, element)
+end
 
 function guiGetColour(element)
 	local elementType = stripGUIPrefix(getElementType(element))
@@ -202,7 +217,7 @@ end
 --]]--------------------------------------------------
 function guiLabelSetWordwrap(label, wordwrap, undoable)
 	if getElementData(label, "guieditor.internal:dxElement") then
-		local dx = DX_Element.ids[getElementData(label, "guieditor.internal:dxElement")]
+		local dx = DX_Element.getDXFromElement(label)
 			
 		if dx.dxType then
 			if undoable then
@@ -265,7 +280,7 @@ function guiLabelSetHorizontalAlign(label, horz, wordwrap, undoable)
 			action[#action].rfunc = guiLabelSetHorizontalAlign
 			action[#action].rvalues = {label, horz}
 				
-			action.description = "Set label h-alignment"
+			action.description = "Set label h-alignment (" .. tostring(horz) .. ")"
 			UndoRedo.add(action)	
 		end
 	end	
@@ -278,37 +293,33 @@ function guiLabelSetHorizontalAlign(label, horz, wordwrap, undoable)
 		setElementData(label, "guieditor:wordwrap", true)
 	end
 end
-function guiLabelSetHorizontalAlignFromMenu(label, horz)
-	local horzString = "right"
-	
-	if horz == 1 then
-		horzString = "left" 
-	elseif horz == 2 then
-		horzString = "center"
-	end
+function guiLabelSetHorizontalAlignFromMenu(label, horz, generateAction)
+	local horzString = guiLabelAlignmentIDToString(label, horz, false)
 	
 	if exists(label) then
 		if getElementData(label, "guieditor.internal:dxElement") then
-			local dx = DX_Element.ids[getElementData(label, "guieditor.internal:dxElement")]
+			local dx = DX_Element.getDXFromElement(label)
 			
 			if dx.dxType then
-				local action = {}
-				action[#action + 1] = {}
-				action[#action].ufunc = DX_Text.alignX
-				action[#action].uvalues = {dx, dx.alignX_}
-				action[#action].rfunc = DX_Text.alignX
-				action[#action].rvalues = {dx, horzString}
+				if generateAction and dx.alignX_ ~= horzString then
+					local action = {}
+					action[#action + 1] = {}
+					action[#action].ufunc = DX_Text.alignX
+					action[#action].uvalues = {dx, dx.alignX_}
+					action[#action].rfunc = DX_Text.alignX
+					action[#action].rvalues = {dx, horzString}
+					
+					action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." h-alignment (" .. tostring(horzString) .. ")"
+					UndoRedo.add(action)		
+				end
 				
-				action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." h-alignment"
-				UndoRedo.add(action)		
-			
 				dx:alignX(horzString)
 			end
 			
 			return
 		end
 
-		guiLabelSetHorizontalAlign(label, horzString, nil, true)
+		guiLabelSetHorizontalAlign(label, horzString, nil, generateAction)
 	end
 end
 
@@ -336,7 +347,7 @@ function guiLabelSetVerticalAlign(label, vert, undoable)
 			action[#action].rfunc = guiLabelSetVerticalAlign
 			action[#action].rvalues = {label, vert}
 				
-			action.description = "Set label v-alignment"
+			action.description = "Set label v-alignment (" .. tostring(vert) .. ")"
 			UndoRedo.add(action)	
 		end
 	end	
@@ -345,37 +356,33 @@ function guiLabelSetVerticalAlign(label, vert, undoable)
 	
 	guiLabelSetVerticalAlign_(label, vert)
 end
-function guiLabelSetVerticalAlignFromMenu(label, vert)
-	local vertString = "bottom"
-	
-	if vert == 1 then
-		vertString = "top"
-	elseif vert == 2 then
-		vertString = "center"
-	end
+function guiLabelSetVerticalAlignFromMenu(label, vert, generateAction)
+	local vertString = guiLabelAlignmentIDToString(label, vert, true)
 
 	if exists(label) then
 		if getElementData(label, "guieditor.internal:dxElement") then
-			local dx = DX_Element.ids[getElementData(label, "guieditor.internal:dxElement")]
+			local dx = DX_Element.getDXFromElement(label)
 			
 			if dx.dxType then
-				local action = {}
-				action[#action + 1] = {}
-				action[#action].ufunc = DX_Text.alignY
-				action[#action].uvalues = {dx, dx.alignY_}
-				action[#action].rfunc = DX_Text.alignY
-				action[#action].rvalues = {dx, vertString}
+				if generateAction and dx.alignY ~= vertString then
+					local action = {}
+					action[#action + 1] = {}
+					action[#action].ufunc = DX_Text.alignY
+					action[#action].uvalues = {dx, dx.alignY_}
+					action[#action].rfunc = DX_Text.alignY
+					action[#action].rvalues = {dx, vertString}
+					
+					action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." v-alignment (" .. tostring(vertString) .. ")"
+					UndoRedo.add(action)		
+				end
 				
-				action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." v-alignment"
-				UndoRedo.add(action)		
-			
 				dx:alignY(vertString)
 			end
 			
 			return
 		end
 
-		guiLabelSetVerticalAlign(label, vertString, true)
+		guiLabelSetVerticalAlign(label, vertString, generateAction)
 	end
 end
 
@@ -387,6 +394,33 @@ function guiLabelGetVerticalAlign(label)
 	end
 
 	return getElementData(label, "guieditor:verticalAlignment") or "top"
+end
+
+
+function guiLabelAlignmentIDToString(label, id, vertical)
+	if vertical then
+		if id == "top" or id == "center" or id == "bottom" then
+			return id
+		elseif id == 1 then
+			return "top"
+		elseif id == 2 then
+			return "center"
+		else
+			return "bottom"
+		end
+	else
+		if id == "left" or id == "center" or id == "right" then
+			return id
+		elseif id == 1 then
+			return "left"
+		elseif id == 2 then
+			return "center"
+		else
+			return "right"
+		end
+	end
+	
+	return ""
 end
 
 

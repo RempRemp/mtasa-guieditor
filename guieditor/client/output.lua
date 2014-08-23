@@ -66,7 +66,9 @@ function Output.create()
 		end, "__self"
 	)
 	setElementData(Output.gui.wndMain, "guiSizeMinimum", {w = 460, h = 300})
-
+	-- the getter/setter pair for this only works on managed() elements, so just bypass
+	setElementData(Output.gui.wndMain, "guieditor:windowSizable", true)
+	
 	Output.gui.memOutput = guiCreateMemo(10, 25, 530, 275, "", false, Output.gui.wndMain)
 	guiMemoSetReadOnly(Output.gui.memOutput, true)
 	setElementData(Output.gui.memOutput, "guiSnapTo", {[gGUISides.left] = 10, [gGUISides.right] = 10, [gGUISides.top] = 25, [gGUISides.bottom] = 50})
@@ -181,16 +183,16 @@ function Output.show(text, defaultVariables)
 	
 	guiSetText(Output.gui.memOutput, text or "")
 
-	-- don't try to resize if we resizing is turned off, usually means that the window is maximised
-	if Settings.loaded.output_window_autosize.value and guiWindowGetSizable(Output.gui.wndMain) then
+	-- don't try to resize if resizing is turned off, usually means that the window is maximised
+	if Settings.loaded.output_window_autosize.value and guiWindowGetSizable(Output.gui.wndMain) then	
 		if not guiGetVisible(Output.gui.wndMain) then
 			local w, h = guiGetSize(Output.gui.wndMain, false)
 			local x, y = guiGetPosition(Output.gui.wndMain, false)
 			local centered = x == (gScreen.x - w) / 2 and y == (gScreen.y - h) / 2
 			
-			-- 20 for gap between memo and window, 20 for memo internal borders (including scrollbar), 5 for good measure
-			if (Generation.biggestWidth + 45) > w then		
-				Output.sizeAndMove(Generation.biggestWidth + 45, h, centered and (gScreen.x - (Generation.biggestWidth + 45)) / 2 or x, centered and (gScreen.y - h) / 2 or y)
+			-- 20 for gap between memo and window, 20 for memo internal borders (including scrollbar), 10 for good measure
+			if (Generation.biggestWidth + 50) > w then		
+				Output.sizeAndMove(Generation.biggestWidth + 50, h, centered and (gScreen.x - (Generation.biggestWidth + 50)) / 2 or x, centered and (gScreen.y - h) / 2 or y)
 			end
 		end
 	end

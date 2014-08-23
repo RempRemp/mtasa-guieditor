@@ -210,6 +210,7 @@ function createMenu_gridlistItemSub()
 			local element = menu:getGUI()
 			
 			if exists(element) then
+				-- disable so that we the item doesn't get deselected when clicking the menu option
 				guiSetEnabled(element, false)
 			
 				local row, col = guiGridListGetSelectedItem(element)
