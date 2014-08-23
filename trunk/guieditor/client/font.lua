@@ -94,7 +94,7 @@ FontPicker.instances = {}
 
 addEvent("guieditor:client_getFonts", true)
 addEventHandler("guieditor:client_getFonts", root,
-	function(files)
+	function(files, permission)
 		if files then
 			local sortable = {}
 			
@@ -105,6 +105,12 @@ addEventHandler("guieditor:client_getFonts", root,
 			table.sort(sortable)
 					
 			FontPicker.browserData = {files = files, sorted = sortable}
+			
+			local permissionWarning = ""
+			
+			if isBool(permission) and not permission then
+				permissionWarning = "\n\n(Access to general.ModifyOtherObjects is needed to request fonts)"
+			end
 			
 			for i,picker in ipairs(FontPicker.instances) do
 				if guiGetVisible(picker.window) and picker.custom then
@@ -125,7 +131,7 @@ addEventHandler("guieditor:client_getFonts", root,
 				if #sortable > 0 then
 					m = MessageBox_Info:create("Font Picker Refresh", "Font list successfully updated from the server.")
 				else
-					m = MessageBox_Info:create("Font Picker Refresh", "Could not get font list from the server.\n\nPlease check ACL permissions")				
+					m = MessageBox_Info:create("Font Picker Refresh", "Could not get font list from the server.\n\nPlease check ACL permissions" .. permissionWarning)				
 				end
 				
 				guiSetProperty(m.window, "AlwaysOnTop", "True")
@@ -146,7 +152,7 @@ addEventHandler("guieditor:client_getFonts", root,
 						end
 					end						
 				
-					local m = MessageBox_Info:create("Font Picker Refresh", "Could not get font list from the server.\n\nPlease check ACL permissions")
+					local m = MessageBox_Info:create("Font Picker Refresh", "Could not get font list from the server.\n\nPlease check ACL permissions" .. permissionWarning)
 					guiSetProperty(m.window, "AlwaysOnTop", "True")		
 
 					m.onClose = 
@@ -167,7 +173,7 @@ addEventHandler("guieditor:client_getFonts", root,
 					end
 				end	
 				
-				local m = MessageBox_Info:create("Font Picker Refresh", "Font list could not be updated from the server.\n\nTry again later.")
+				local m = MessageBox_Info:create("Font Picker Refresh", "Font list could not be updated from the server (request limit reached).\n\nTry again later.")
 				guiSetProperty(m.window, "AlwaysOnTop", "True")
 	
 				m.onClose = 

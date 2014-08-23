@@ -290,7 +290,7 @@ function Settings.createGUI()
 	--[[--------------------------------------------------
 		output window autosize
 	--]]--------------------------------------------------
-	Settings.gui.chkOutputWindowAutosize = guiCreateCheckBox(20, 280, 230, 20, "Automatically size output window", toBool(Settings.loaded.load_code_parse_calculations.value), false, Settings.gui.wndMain)
+	Settings.gui.chkOutputWindowAutosize = guiCreateCheckBox(20, 280, 230, 20, "Automatically size output window", toBool(Settings.loaded.output_window_autosize.value), false, Settings.gui.wndMain)
 	
 	Settings.gui.lblOutputWindowAutosizeCrush = guiCreateLabel(250, 280, 20, 20, "<<", false, Settings.gui.wndMain)
 	setRolloverColour(Settings.gui.lblOutputWindowAutosizeCrush, gColours.primary, gColours.defaultLabel)

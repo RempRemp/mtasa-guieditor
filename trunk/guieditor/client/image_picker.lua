@@ -17,7 +17,7 @@ ImagePicker = {
 
 addEvent("guieditor:client_getImages", true)
 addEventHandler("guieditor:client_getImages", root,
-	function(images)
+	function(images, permission)
 		if images then
 			local sortable = {}
 			
@@ -29,6 +29,11 @@ addEventHandler("guieditor:client_getImages", root,
 			
 			ImagePicker.images = images
 			ImagePicker.sorted = sortable
+			local permissionWarning = ""
+			
+			if isBool(permission) and not permission then
+				permissionWarning = "\n\n(Access to general.ModifyOtherObjects is needed to request images)"
+			end
 			
 			if guiGetVisible(ImagePicker.gui.wndMain) then
 				ImagePicker.gui.expandingGrid:setData(images, sortable, getResourceName(getThisResource()))
@@ -37,17 +42,17 @@ addEventHandler("guieditor:client_getImages", root,
 					if #sortable > 0 then
 						MessageBox_Info:create("Image Picker Refresh", "Image list successfully updated from the server.")
 					else
-						MessageBox_Info:create("Image Picker Refresh", "Could not get the image list from the server.\n\nPlease check ACL permissions")
+						MessageBox_Info:create("Image Picker Refresh", "Could not get the image list from the server.\n\nPlease check ACL permissions" .. permissionWarning)
 					end
 				else
 					if #sortable == 0 then
-						MessageBox_Info:create("Image Picker Refresh", "Could not get the image list from the server.\n\nPlease check ACL permissions")
+						MessageBox_Info:create("Image Picker Refresh", "Could not get the image list from the server.\n\nPlease check ACL permissions" .. permissionWarning)
 					end
 				end
 			end
 		else
 			if ImagePicker.reloading then
-				MessageBox_Info:create("Image Picker Refresh", "Image list could not be updated from the server.\n\nTry again later.")
+				MessageBox_Info:create("Image Picker Refresh", "Image list could not be updated from the server (request limit reached).\n\nTry again later.")
 			end
 		end
 		

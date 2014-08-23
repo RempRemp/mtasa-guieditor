@@ -19,18 +19,13 @@
 		- guiGetFont does not return an element when a custom font is used
 			
 	Wishlist:
-		- relative DX
 		- make multiple selection right click menu smarter when selecting many of the same element type
 		- better editbox support (highlighting from outside the bounds, multiline editing)
 		- GUI Editor wiki page
 		- Output in OO format
 		- Document all new changes
-		- Do something with the broken update checker
 		- Resize/move shortcut options (e.g. fit parent size, top left corner, etc)
-		- Pressing enter auto-accepts the colour picker
-		- Preview new colour on element when using the colour picker
-		- Let text alignment options immediately preview on the element when changed
-		- Fix server F2 restart join thing
+		- add undo/redo actions for gridlist options
 		
 	Changes:
 		- Added font size setting
@@ -47,6 +42,11 @@
 		- Added copy titlebar button to property "current value" window
 		- Reworked the help documentation window to be less rubbish
 		- Made properties option skip to the relevant properties (rather than landing on the element selection pane)
+		- Pressing enter when using the colour picker now auto-accepts the current colour
+		- Selecting a new colour in the colour picker is now reflected immediately in the gui element (and reversed if not saved)
+		- Text alignment options now immediately preview changes on the gui element when changed
+		- Added absolute/relative toggle for DX items
+		- Made image/font list request error messages a little clearer
 --]]--------------------------------------------------
 
 gEnabled = false
@@ -799,6 +799,7 @@ end
 function setElementOutputType(element, outputType)
 	local t = outputType
 	
+	-- radio button menu item
 	if type(outputType) == "table" then
 		local i = outputType:getSelected()
 		

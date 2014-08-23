@@ -35,6 +35,16 @@ addEventHandler("onResourceStart", resourceRoot,
 					end
 				)
 			end
+			
+			addEventHandler("onPlayerJoin", root,
+				function()
+					bindKey(source, "F2", "up", 
+						function() 
+							restartResource(resource)
+						end
+					)				
+				end
+			)
 		end
 	end
 )
@@ -44,8 +54,8 @@ addEventHandler("guieditor:server_getImages", root,
 	function()
 		-- stop people being able to spam this
 		if getImageTime[client] then
-			if getImageTime[client] > (getTickCount() - 60000) then
-				triggerClientEvent(client, "guieditor:client_getImages", client)
+			if getImageTime[client] > (getTickCount() - 30000) then
+				triggerClientEvent(client, "guieditor:client_getImages", client, false)
 				return
 			end
 		end
@@ -69,7 +79,7 @@ addEventHandler("guieditor:server_getFonts", root,
 	function()
 		-- stop people being able to spam this
 		if getFontTime[client] then
-			if getFontTime[client] > (getTickCount() - 60000) then
+			if getFontTime[client] > (getTickCount() - 30000) then
 				triggerClientEvent(client, "guieditor:client_getFonts", client)
 				return
 			end
@@ -146,7 +156,7 @@ function findFilesByType(extension, event)
 	end
 
 	for player in pairs(files[extension].waiting) do
-		triggerClientEvent(player, "guieditor:" .. event, player, files[extension].files)
+		triggerClientEvent(player, "guieditor:" .. event, player, files[extension].files, permission)
 	end
 end
 
@@ -417,6 +427,7 @@ addEventHandler("guieditor:server_checkUpdateStatus", root,
 
 function updateResult(name, version, player, automatic)
 	-- 19/07/2014 - this 404s
+	-- 05/08/2014 - now it doesn't?
 	if not (string.lower(name):find("error") or version == 0) then
 		local away = parseVersion(tostring(version))
 		local home = parseVersion(tostring(getResourceInfo(getThisResource(),"version")))

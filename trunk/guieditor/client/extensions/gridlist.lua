@@ -279,16 +279,18 @@ function guiGridListRemoveRow(gridlist, rowID)
 	if guiGridListRemoveRow_(gridlist, rowID) then
 		local totalData = getElementData(gridlist, "guieditor.internal:gridlistData") or {}
 		
-		for row = 0, guiGridListGetRowCount(gridlist) + 1 do
-			if row == rowID then
-				for col = 1, guiGridListGetColumnCount(gridlist) do
-					if exists(totalData[row][col].label) then
-						destroyElement(totalData[row][col].label)
-					end
-				end				
-			elseif row > rowID then
-				totalData[row - 1] = totalData[row]
-				totalData[row] = nil
+		if #totalData > 0 then
+			for row = 0, guiGridListGetRowCount(gridlist) + 1 do
+				if row == rowID then
+					for col = 1, guiGridListGetColumnCount(gridlist) do
+						if totalData[row] ~= nil and totalData[row][col] ~= nil and exists(totalData[row][col].label) then
+							destroyElement(totalData[row][col].label)
+						end
+					end				
+				elseif row > rowID then
+					totalData[row - 1] = totalData[row]
+					totalData[row] = nil
+				end
 			end
 		end
 		
@@ -1053,3 +1055,102 @@ addEventHandler("onClientRender", root,
 		end
 	end
 )
+
+--[[
+addEventHandler("onClientResourceStart", resourceRoot,
+    function()
+        -- testthing = guiCreateGridList(600, 350, 400, 200, false)
+		-- guiGridListSetSelectionMode(testthing, 3)
+        -- guiGridListAddColumn(testthing, "thing 0.2", 0.2)
+		-- guiGridListAddColumn(testthing, "thing 0.3", 0.3)
+
+		-- guiGridListAddRow(testthing)
+		-- guiGridListSetItemText(testthing, 0, 1, "1a", false, false)
+		-- guiGridListSetItemText(testthing, 0, 2, "hello there", false, false)
+		
+		-- --guiGridListAutoSizeColumn(testthing, 2)
+		-- --guiGridListSetColumnWidth(testthing, 1, 21, false)
+		
+		-- guiGridListSetColumnsMovable(testthing, true)
+		
+        -- for i = 1, 50 do
+            -- guiGridListAddRow(testthing)
+			-- guiGridListSetItemText(testthing, i, 1, tostring(i), false, false)
+			
+			-- local c = guiGridListAddColumn(testthing, "thing" .. tostring(i), 0.1)
+			-- guiGridListSetItemText(testthing, 0, c, tostring(i), false, false)
+        -- end
+		-- guiGridListSetSelectedItem(testthing, 3, 1)
+	
+
+	    testthing = guiCreateGridList(600, 350, 400, 200, false)
+		guiGridListSetSelectionMode(testthing, 3)
+
+		guiGridListAddColumn(testthing, "Col 1", 0.9)
+		guiGridListAddColumn(testthing, "Col 2", 0.4)
+		guiGridListAddColumn(testthing, "Col 3", 0.4)
+		guiGridListAddColumn(testthing, "Col 4", 0.4)
+		
+        for row = 0, 20 do
+			guiGridListAddRow(testthing)
+		
+			for col = 1, 2 do
+				guiGridListSetItemText(testthing, row, col, "text", false, false)
+				guiGridListSetItemTextOverlay(testthing, row, col, " - hello  " .. tostring(col))
+			end
+        end	
+    end
+)
+
+addEventHandler("onClientRender", root,
+    function()
+		local row,col = guiGridListGetSelectedItem(testthing)	
+		local x, y = guiGridListGetItemBounds(testthing, row, col)
+		local v, h = guiGridListGetScrollBars(testthing)
+		
+		local a = -1
+		local b = 0
+		local c = a * 0
+        dxDrawText(tostring(guiGridListGetHorizontalScrollPosition(testthing)), 48, 447, 295, 478, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+		
+		local validDrag = currentGridlistDrag ~= nil and currentGridlistDrag.passedThreshhold or false
+		dxDrawText(tostring(validDrag), 48, 467, 295, 498, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+		
+		
+		local visibility = getElementData(testthing, "guieditor.internal:gridlistScrollbarVisibility") or {}
+		dxDrawText("Scrollbars: " .. tostring(visibility.vertical) .. ", " .. tostring(visibility.horizontal), 48, 487, 295, 528, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+		
+		--guiGridListSetSelectedItem(testthing, 0, 1)
+			
+		dxDrawText("Selected: " .. tostring(row) .. ", " .. tostring(col), 48, 507, 295, 548, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+		
+		local width = guiGridListGetColumnWidth(testthing, 1)
+		dxDrawText("Col width: " .. tostring(width), 48, 527, 295, 568, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+		
+		local cx, cy = getCursorPosition(true)
+		if not cx then
+			cx, cy = 0,0
+		end
+		
+		dxDrawText(string.format("Cursor: %d, %d", cx, cy), 48, 547, 295, 588, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+		
+		dxDrawText("Selected text: '" .. guiGridListGetItemText(testthing, row, col) .. "'", 48, 567, 295, 608, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+
+		dxDrawImage(x - 5, y - 5, 10, 10, ":GUIEditor/images/dx_elements/radio_button.png", 0, 0, 0, tocolor(255, 255, 255, 255), true)
+		
+		local xt, yt, wt, ht = guiGridListGetItemTextBounds(testthing, row, col)
+		local bx, by, bw, bh = guiGridListGetItemVisibleBounds(testthing, row, col)
+		dxDrawRectangle(bx, by, bw, bh, tocolor(252, 49, 1, 255), true)
+		
+		if guiGridListIsPointWithinVisibleBounds(testthing, xt, yt) then
+			dxDrawText(guiGridListGetItemText(testthing, row, col), xt, yt, xt + guiGridListGetColumnWidth(testthing, col), yt + rowHeight, tocolor(255, 255, 255, 255), 1, "default", "left", "top", true, false, true)
+			
+			local tw = dxGetTextWidth(guiGridListGetItemText(testthing, row, col))
+			
+			dxDrawText(" - blah blah blah", xt + tw, yt, xt + wt, yt + ht, tocolor(0, 0, 0, 255), 1, "default", "left", "bottom", true, false, true, false, true)
+		end
+		
+		dxDrawText("Scrolling: v: " .. tostring(currentlyScrolling.vertical) .. ", h: " .. tostring(currentlyScrolling.horizontal), 48, 587, 295, 628, tocolor(255, 0, 0, 255), 1.00, "default-bold", "left", "top", false, false, false, false, false)
+	end
+)
+]]
