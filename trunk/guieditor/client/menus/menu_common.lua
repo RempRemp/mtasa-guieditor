@@ -98,18 +98,10 @@ function createMenu_resizeSub()
 
 	gMenus.resizeSub:addItem(createItem_resizeX())
 	gMenus.resizeSub:addItem(createItem_resizeY())
-end
-
-
---[[--------------------------------------------------
-	image resize sub-menu
---]]--------------------------------------------------
-function createMenu_resizeImageSub()
-	gMenus.resizeImageSub = Menu:create("Resize")
-
-	gMenus.resizeImageSub:addItem(createItem_resizeX())
-	gMenus.resizeImageSub:addItem(createItem_resizeY())
-	gMenus.resizeImageSub:addItem(createItem_resizeImage())
+	gMenus.resizeSub:addItem(createItem_resizeImage())
+	gMenus.resizeSub:addItem(createItem_resizeFitWidth())
+	gMenus.resizeSub:addItem(createItem_resizeFitHeight())
+	gMenus.resizeSub:addItem(createItem_resizeContrained())
 end
 
 

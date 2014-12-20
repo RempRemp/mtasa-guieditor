@@ -80,6 +80,21 @@ end
 
 
 --[[--------------------------------------------------
+	return the width/height of the parent of a gui element,
+	regardless of whether the parent is a gui element or the screen
+--]]--------------------------------------------------
+function guiGetParentSize(element)
+	local parent = guiGetParent(element)
+	
+	if parent then
+		return guiGetSize(parent, false)
+	else
+		return guiGetScreenSize()
+	end
+end
+
+
+--[[--------------------------------------------------
 	get all gui elements with the same parent as the given element
 --]]--------------------------------------------------
 function guiGetSiblings(element)

@@ -23,7 +23,6 @@ function createMenus()
 	createMenu_undoSub()
 	createMenu_redoSub()
 	createMenu_copySub()
-	createMenu_resizeImageSub()
 	createMenu_positionCodeSub()
 	createMenu_gridlistItemSub()
 	

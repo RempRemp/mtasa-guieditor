@@ -136,7 +136,7 @@ function Mover.move(absoluteX, absoluteY)
 		for _,item in ipairs(Mover.items) do
 			local x, y = absoluteX - item.offset.x, absoluteY - item.offset.y
 			local _x, _y = guiGetPosition(item.element, false)
-			
+
 			local parent = guiGetParent(item.element)
 			
 			if parent then

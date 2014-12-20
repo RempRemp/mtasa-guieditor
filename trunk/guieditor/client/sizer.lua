@@ -15,7 +15,7 @@ Sizer = {
 local gFreeSize = {topLeft = 1, topRight = 2, bottomLeft = 3, bottomLeft = 4}
 
 
-function Sizer.add(element, sizeX, sizeY, useOffset, ignoreAction)
+function Sizer.add(element, sizeX, sizeY, useOffset, ignoreAction, constrain)
 	local dx
 	
 	if type(element) == "table" then
@@ -33,6 +33,15 @@ function Sizer.add(element, sizeX, sizeY, useOffset, ignoreAction)
 		return
 	end
 	
+	local constraint = -1
+	
+	if constrain then 
+		local w, h = guiGetSize(element, false)
+		constraint = w / h
+		sizeX = true
+		sizeY = true
+	end
+	
 	sizeX = (sizeX == nil and true or sizeX)
 	sizeY = (sizeY == nil and true or sizeY)
 	
@@ -47,7 +56,7 @@ function Sizer.add(element, sizeX, sizeY, useOffset, ignoreAction)
 	
 	ContextBar.add("Click and drag to resize the element")
 
-	table.insert(Sizer.items, {element = element, sizeX = sizeX, sizeY = sizeY, offset = useOffset, anchor = dx and dx.anchor or false})
+	table.insert(Sizer.items, {element = element, sizeX = sizeX, sizeY = sizeY, offset = useOffset, anchor = dx and dx.anchor or false, constraint = constraint})
 end	
 
 
@@ -210,7 +219,15 @@ function Sizer.move(absoluteX, absoluteY)
 			eW, eH = Creator.clampSize(eW, eH, item.elementType)
 				
 			if (item.sizeX and item.sizeY) then
-				guiSetSize(item.element, x, y, false)
+				if item.constraint > 0 then
+					if y < x / item.constraint then
+						guiSetSize(item.element, y * item.constraint, y, false)
+					else
+						guiSetSize(item.element, x, x / item.constraint, false)
+					end
+				else
+					guiSetSize(item.element, x, y, false)
+				end
 			elseif item.sizeX then
 				guiSetSize(item.element, x, eH, false)
 			elseif item.sizeY then

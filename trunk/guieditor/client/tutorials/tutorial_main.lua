@@ -137,9 +137,7 @@ function Tutorial.constructors.main()
 	
 	]])
 	
-	local pageCodeLoading = t:addPage("Code Loading", [[Lua code can be loaded into the GUI Editor using the main menu item 'Load Code'.
-	
-	This will list all the previously output code samples, allow you specify particular files or paste in the code directly.
+	local pageCodeLoading = t:addPage("Code Loading", [[Lua code can be loaded into the GUI Editor using the main menu item 'Load Code'. This will list all the previously output code samples, allow you specify particular files or paste in the code directly.
 	
 	The GUI Editor will attempt to keep all of the same GUI settings, including variable names.
 	

@@ -285,7 +285,7 @@ end
 function resolutionPreview.move(x, y)
 	if resolutionPreview.active and resolutionPreview.drag then
 		local moveX, moveY = x - resolutionPreview.drag.x, y - resolutionPreview.drag.y
-		
+
 		resolutionPreview.viewCorner.x = resolutionPreview.viewCorner.x + moveX
 		resolutionPreview.viewCorner.y = resolutionPreview.viewCorner.y + moveY
 		
@@ -295,6 +295,16 @@ function resolutionPreview.move(x, y)
 		for _,element in ipairs(resolutionPreview._save) do
 			if not guiGetParent(element.element) then
 				local eX, eY = guiGetPosition(element.element, false)
+				
+				-- bug with guiGetPosition
+				if eX < 0 then
+					eX = eX - 1
+				end
+				
+				if eY < 0 then
+					eY = eY - 1
+				end
+				
 				guiSetPosition(element.element, eX + moveX, eY + moveY, false)
 			end
 		end		

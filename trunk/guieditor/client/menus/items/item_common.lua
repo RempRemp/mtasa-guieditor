@@ -360,6 +360,9 @@ function createItem_resize()
 	return MenuItem_Text:create("Resize"):set({onClick = Sizer.add, onClickArgs = {"__gui"}})
 end
 
+function createItem_resizeContrained()
+	return MenuItem_Text:create("Resize (constrained)"):set({onClick = Sizer.add, onClickArgs = {"__gui", true, true, false, false, true}})
+end
 
 function createItem_resizeX()
 	return MenuItem_Text:create("Resize Width"):set({onClick = Sizer.add, onClickArgs = {"__gui", true, false}})
@@ -368,6 +371,86 @@ end
 
 function createItem_resizeY()
 	return MenuItem_Text:create("Resize Height"):set({onClick = Sizer.add, onClickArgs = {"__gui", false, true}})
+end
+
+function createItem_resizeFitWidth()
+	return MenuItem_Text:create("Fit Parent Width"):set(
+		{
+			onClick = 
+				function(element)
+					local x, y = guiGetPosition(element, false)
+					guiSetPosition(element, 0, y, false)
+					
+					local pW = guiGetParentSize(element, false)
+					local w, h = guiGetSize(element, false)
+					
+					
+					local action = {}
+					action[#action + 1] = {}
+					action[#action].ufunc = guiSetPosition
+					action[#action].uvalues = {element, x, y, false}
+					action[#action].rfunc = guiSetPosition
+					action[#action].rvalues = {element, 0, y, false}
+					
+					action[#action + 1] = {}
+					action[#action].ufunc = guiSetSize
+					action[#action].uvalues = {element, w, h, false}
+					action[#action].rfunc = guiSetSize
+					action[#action].rvalues = {element, pW, h, false}
+					
+					guiSetSize(element, pW, h, false)
+					
+					
+					action.description = "Fit "..guiGetFriendlyName(element).." to parent width"
+					UndoRedo.add(action)
+				end, 
+			onClickArgs = {"__gui"}
+		}
+	)
+end
+
+function createItem_resizeFitHeight()
+	return MenuItem_Text:create("Fit Parent Height"):set(
+		{
+			onClick = 
+				function(element)
+					local x, y = guiGetPosition(element, false)
+					local newY = 0
+					
+					-- windows freak out if they have anything above y=10
+					if guiGetParent(element) then
+						if getElementType(guiGetParent(element)) == "gui-window" then
+							newY = 10
+						end
+					end
+					
+					guiSetPosition(element, x, newY, false)
+					
+					local _, pH = guiGetParentSize(element, false)
+					local w, h = guiGetSize(element, false)
+						
+					guiSetSize(element, w, pH, false)
+					
+					
+					local action = {}
+					action[#action + 1] = {}
+					action[#action].ufunc = guiSetPosition
+					action[#action].uvalues = {element, x, y, false}
+					action[#action].rfunc = guiSetPosition
+					action[#action].rvalues = {element, x, newY, false}
+					
+					action[#action + 1] = {}
+					action[#action].ufunc = guiSetSize
+					action[#action].uvalues = {element, w, h, false}
+					action[#action].rfunc = guiSetSize
+					action[#action].rvalues = {element, w, pH, false}
+					
+					action.description = "Fit "..guiGetFriendlyName(element).." to parent height"
+					UndoRedo.add(action)
+				end, 
+			onClickArgs = {"__gui"}
+		}
+	)
 end
 
 
@@ -1161,13 +1244,22 @@ function createItem_resizeImage()
 				function(element)
 					local size = getElementData(element, "guieditor:imageSize")
 					
-					if size.width and size.height then
+					if size and size.width and size.height then
 						return tostring(size.width) .. " x " .. tostring(size.height)
 					else
 						return "unknown x unknown"
 					end
 				end, 
 			replaceValueArgs = {"__gui"}, 
+			condition = 
+				function(element)
+					if not exists(element) then
+						return false
+					end
+
+					return getElementType(element) == "gui-staticimage"
+				end,
+			conditionArgs = {"__gui"}
 		}
 	)
 end
