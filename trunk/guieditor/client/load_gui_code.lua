@@ -1305,7 +1305,7 @@ function LoadCode.create()
 		end
 	)
 	
-	guiWindowTitlebarButtonAdd(LoadCode.gui.wndMain, "Paste (Ctrl + V)", "left", 
+	guiWindowTitlebarButtonAdd(LoadCode.gui.wndMain, "Paste", "left", 
 		function()
 			if LoadCode.gui.wndPaste then
 				guiSetVisible(LoadCode.gui.wndPaste, true)
@@ -1314,7 +1314,7 @@ function LoadCode.create()
 				return
 			end
 			
-			LoadCode.gui.wndPaste = guiCreateWindow((gScreen.x - 600) / 2, (gScreen.y - 400) / 2, 600, 400, "Paste Code", false)
+			LoadCode.gui.wndPaste = guiCreateWindow((gScreen.x - 600) / 2, (gScreen.y - 400) / 2, 600, 400, "Paste Code (Ctrl + V)", false)
 			guiWindowTitlebarButtonAdd(LoadCode.gui.wndPaste, "Close", "right", function() destroyElement(LoadCode.gui.wndPaste) LoadCode.gui.wndPaste = nil end)					
 			guiWindowTitlebarButtonAdd(LoadCode.gui.wndPaste, "Load this code", "left", 
 				function() 

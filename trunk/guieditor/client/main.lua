@@ -27,29 +27,7 @@
 		- add undo/redo actions for gridlist options
 		
 	Changes:
-		- Added font size setting
-		- Fixed some undo/redo errors with setting fonts
-		- Added a submenu to the code positioning that shows shortcuts for the presets
-		- Fixed some bugs with the code positioning error detection
-		- Fixed xml files being left open on the server
-		- Added highlight colour to editable fields in the right click menus
-		- Made the copy option automatically attach the new copy to the mouse (for element movement)
-		- Added detach/attach options to re-parent elements
-		- Added setting to autosize the code output window to the code content width
-		- Added Maximise/Restore titlebar options to the output window
-		- Added highlight to elements with default variables when the output window warning is clicked
-		- Added copy titlebar button to property "current value" window
-		- Reworked the help documentation window to be less rubbish
-		- Made properties option skip to the relevant properties (rather than landing on the element selection pane)
-		- Pressing enter when using the colour picker now auto-accepts the current colour
-		- Selecting a new colour in the colour picker is now reflected immediately in the gui element (and reversed if not saved)
-		- Text alignment options now immediately preview changes on the gui element when changed
-		- Added absolute/relative toggle for DX items
-		- Made image/font list request error messages a little clearer
-		- Added "Fit Parent Width" and "Fit Parent Height" resizing option that changes the width or height to fill the parent element
-		- Added "Resize (constrained)" resizing option that keeps the same width/height contraint while resizing
-		- Added "Parent menu" option to window menu
-		- Fixed issue with preview in resolution window incorrectly positioning elements when partially off screen
+	
 --]]--------------------------------------------------
 
 gEnabled = false
