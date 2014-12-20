@@ -1305,7 +1305,7 @@ function LoadCode.create()
 		end
 	)
 	
-	guiWindowTitlebarButtonAdd(LoadCode.gui.wndMain, "Paste", "left", 
+	guiWindowTitlebarButtonAdd(LoadCode.gui.wndMain, "Paste (Ctrl + V)", "left", 
 		function()
 			if LoadCode.gui.wndPaste then
 				guiSetVisible(LoadCode.gui.wndPaste, true)

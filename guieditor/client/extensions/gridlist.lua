@@ -496,7 +496,7 @@ function guiGridListGetColumnWidth(gridlist, columnID)
 	if not exists(gridlist) or columnID == -1 then
 		return -1
 	end
-	
+
 	local columns = getElementData(gridlist, "guieditor.internal:gridlistColumns") or {}
 	
 	if columns[columnID] then

@@ -246,60 +246,6 @@ function Menu:open(x, y, guiParent)
 		end
 	end		
 
-	self.position.x = x or self.position.x
-	self.position.y = y or self.position.y
-	
-	if (self.position.y + self.height) > gScreen.y then
-		if self.position.y - self.height < 0 then
-			self.position.y = math.max(0, gScreen.y - self.height)
-		else
-			if self.parent then
-				local parentItemHeight = 0
-				
-				for id, menu in pairs(Menu.getFromID(self.parent).children) do
-					if menu == self.id then
-						parentItemHeight = MenuItem.getFromID(id).height
-						break
-					end
-				end		
-
-				self.position.y = self.position.y - self.height + parentItemHeight
-			else
-				self.position.y = self.position.y - self.height
-			end
-		end
-	end
-	
-	if self.height > gScreen.y then
-		self.scrollable = true
-	end
-	
-	if (self.position.x + self.width) > gScreen.x or (self.parent and Menu.getFromID(self.parent).flipped) then
-		self.flipped = true
-		
-		if self.parent then
-			if Menu.getFromID(self.parent).flipped then
-				local grandparent = Menu.getFromID(Menu.getFromID(self.parent):getParent())
-				
-				if grandparent and self.position.y > (grandparent.position.y + grandparent.height) then
-					self.position.x = Menu.getFromID(self.parent).position.x + Menu.getFromID(self.parent).width
-				else
-					self.position.x = Menu.getFromID(self.parent).position.x - self.width
-				end
-			else
-				if self.position.y > (Menu.getFromID(self:getParent(true)).position.y + Menu.getFromID(self:getParent(true)).height) then
-					self.position.x = Menu.getFromID(self:getParent(false)).position.x - self.width
-				else
-					self.position.x = Menu.getFromID(self:getParent(true)).position.x - self.width
-				end
-			end
-		else
-			self.position.x = self.position.x - self.width
-		end
-	else
-		self.flipped = false
-	end
-
 	-- if this menu has a guiParent, or its top-level menu parent has a guiParent
 	-- then set the dynamic menu items to the correct values for this element
 	if guiParent or (self:getParent(true) and Menu.getFromID(self:getParent(true)).guiParent) then
@@ -440,6 +386,62 @@ function Menu:open(x, y, guiParent)
 		end				
 	end
 	
+	self.position.x = x or self.position.x
+	self.position.y = y or self.position.y
+	
+	self:calculateHeight()
+	
+	if (self.position.y + self.height) > gScreen.y then
+		if self.position.y - self.height < 0 then
+			self.position.y = math.max(0, gScreen.y - self.height)
+		else
+			if self.parent then
+				local parentItemHeight = 0
+				
+				for id, menu in pairs(Menu.getFromID(self.parent).children) do
+					if menu == self.id then
+						parentItemHeight = MenuItem.getFromID(id).height
+						break
+					end
+				end		
+
+				self.position.y = self.position.y - self.height + parentItemHeight
+			else
+				self.position.y = self.position.y - self.height
+			end
+		end
+	end
+	
+	if self.height > gScreen.y then
+		self.scrollable = true
+	end
+	
+	if (self.position.x + self.width) > gScreen.x or (self.parent and Menu.getFromID(self.parent).flipped) then
+		self.flipped = true
+		
+		if self.parent then
+			if Menu.getFromID(self.parent).flipped then
+				local grandparent = Menu.getFromID(Menu.getFromID(self.parent):getParent())
+				
+				if grandparent and self.position.y > (grandparent.position.y + grandparent.height) then
+					self.position.x = Menu.getFromID(self.parent).position.x + Menu.getFromID(self.parent).width
+				else
+					self.position.x = Menu.getFromID(self.parent).position.x - self.width
+				end
+			else
+				if self.position.y > (Menu.getFromID(self:getParent(true)).position.y + Menu.getFromID(self:getParent(true)).height) then
+					self.position.x = Menu.getFromID(self:getParent(false)).position.x - self.width
+				else
+					self.position.x = Menu.getFromID(self:getParent(true)).position.x - self.width
+				end
+			end
+		else
+			self.position.x = self.position.x - self.width
+		end
+	else
+		self.flipped = false
+	end
+	
 	self:calculateItemPositions()
 	
 	self.mouseState = Menu.mouseStates.none
@@ -448,7 +450,7 @@ function Menu:open(x, y, guiParent)
 	self:setVisible(true)
 	
 	self:updateMouseState()	
-	self:calculateHeight()
+	
 	
 	if self.onOpen then
 		self.onOpen(self)
@@ -504,8 +506,8 @@ function Menu:itemEnterHandler(item)
 	if self.children[item.id] then
 		Menu.getFromID(self.children[item.id]).parent = self.id
 		
-		Menu.getFromID(self.children[item.id]):open(item.position.x + item.width, item.position.y)
 		Menu.getFromID(self.children[item.id]).guiParent = self.guiParent
+		Menu.getFromID(self.children[item.id]):open(item.position.x + item.width, item.position.y)
 	end
 
 	if self.onItemEnter then

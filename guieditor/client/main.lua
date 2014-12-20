@@ -24,7 +24,6 @@
 		- GUI Editor wiki page
 		- Output in OO format
 		- Document all new changes
-		- Resize/move shortcut options (e.g. fit parent size, top left corner, etc)
 		- add undo/redo actions for gridlist options
 		
 	Changes:
@@ -36,7 +35,7 @@
 		- Added highlight colour to editable fields in the right click menus
 		- Made the copy option automatically attach the new copy to the mouse (for element movement)
 		- Added detach/attach options to re-parent elements
-		- Added setting to autosize the code output window to the code content length
+		- Added setting to autosize the code output window to the code content width
 		- Added Maximise/Restore titlebar options to the output window
 		- Added highlight to elements with default variables when the output window warning is clicked
 		- Added copy titlebar button to property "current value" window
@@ -47,6 +46,10 @@
 		- Text alignment options now immediately preview changes on the gui element when changed
 		- Added absolute/relative toggle for DX items
 		- Made image/font list request error messages a little clearer
+		- Added "Fit Parent Width" and "Fit Parent Height" resizing option that changes the width or height to fill the parent element
+		- Added "Resize (constrained)" resizing option that keeps the same width/height contraint while resizing
+		- Added "Parent menu" option to window menu
+		- Fixed issue with preview in resolution window incorrectly positioning elements when partially off screen
 --]]--------------------------------------------------
 
 gEnabled = false
