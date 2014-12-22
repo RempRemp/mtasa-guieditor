@@ -542,7 +542,12 @@ function dxDrawLine(sx, sy, ex, ey, c, width, p, _x)
 	end
 	
 	local x, y, w, h = math.min(sx, ex), math.min(sy, ey), math.max(sx, ex) - math.min(sx, ex), math.max(sy, ey) - math.min(sy, ey)
-
+	
+	sx = math.round(sx)
+	sy = math.round(sy)
+	ex = math.round(ex)
+	ey = math.round(ey)
+	
 	local r, g, b, a = fromcolor(c)
 	local e = createGUIElementFromType("dx_line", x, y, w, h, false, nil)
 	local dx = DX_Element.getDXFromElement(e)
@@ -585,6 +590,11 @@ function dxDrawRectangle(x, y, w, h, c, p, _x)
 		x, y, w, h, c, p = y, w, h, c, p, _x
 	end
 	
+	x = math.round(x)
+	y = math.round(y)
+	w = math.round(w)
+	h = math.round(h)	
+	
 	local r, g, b, a = fromcolor(c)
 	local e = createGUIElementFromType("dx_rectangle", x, y, w, h, false, nil)
 	local dx = DX_Element.getDXFromElement(e)
@@ -607,6 +617,11 @@ function dxDrawImage(x, y, w, h, f, rot, rx, ry, c, p, _x)
 		result = __processPositionCode(x)
 		x, y, w, h, f, rot, rx, ry, c, p = y, w, h, f, rot, rx, ry, c, p, _x
 	end
+	
+	x = math.round(x)
+	y = math.round(y)
+	w = math.round(w)
+	h = math.round(h)	
 	
 	local r, g, b, a = fromcolor(c)
 	local e = createGUIElementFromType("dx_image", x, y, w, h, false, nil, f)
@@ -639,6 +654,11 @@ function dxDrawText(text, l, t, r, b, c, scale, font, ax, ay, clip, wordwrap, p,
 		result = __processPositionCode(text)
 		text, l, t, r, b, c, scale, font, ax, ay, clip, wordwrap, p, colourCoded, subpixel = l, t, r, b, c, scale, font, ax, ay, clip, wordwrap, p, colourCoded, subpixel, _x
 	end
+	
+	r = math.round(r)
+	l = math.round(l)
+	t = math.round(t)
+	b = math.round(b)		
 
 	local r_, g_, b_, a_ = fromcolor(c)
 	local e = createGUIElementFromType("dx_text", l, t, (r or l) - l, (b or t) - t, false, nil)
@@ -771,7 +791,7 @@ function loadGUICode(code)
 	local preLoadDXCount = #DX_Element.instances
 	
 	code = processCode(code)
-	
+
 	-- wrap the code in our overwride functions
 	code = loadCodeOverrides_prefix .. "\n" .. code:gsub("local ", "") .. "\n" .. loadCodeOverrides_suffix
 	
@@ -978,8 +998,8 @@ function processCode(code)
 	}
 	
 	local screenStrings = {
-		parentW = {"screenW", "screenWidth", "Screen.x", "screen.X", "screen.w", "screen.width", "screenX", "sx", "parentW", "parentWidth", "swidth"},
-		parentH = {"screenH", "screenHeight", "Screen.y", "screen.Y", "screen.h", "screen.height", "screenY", "sy", "parentH", "parentHeight", "sheight"},
+		parentW = {"parentW", "screenW", "screenWidth", "Screen.x", "screen.X", "screen.w", "screen.width", "screenX", "sx", "parentWidth", "swidth"},
+		parentH = {"parentH", "screenH", "screenHeight", "Screen.y", "screen.Y", "screen.h", "screen.height", "screenY", "sy", "parentHeight", "sheight"},
 	}
 	
 	local selfStrings = {
@@ -991,6 +1011,7 @@ function processCode(code)
 		local matchS, matchE = string.find(code, match, 0, true)
 		
 		while matchS and matchE and matchS ~= -1 and matchE ~= -1 do
+			--outputDebug("Found match for " .. match)
 			local tokens = {}
 			local lastE = matchE + 1
 			
@@ -1007,7 +1028,7 @@ function processCode(code)
 					if ts and te and ts ~= -1 and te ~= -1 then
 						tokens[#tokens + 1] = clean(string.sub(code, lastE, ts - 1))
 						lastE = te + 1
-						
+						--outputDebug("Found tokens: " .. ts .. " - " .. te .. ": '" .. tokens[#tokens] .. "'")
 						if eType ~= "dxline" then
 							for replace,t in pairs(selfStrings) do
 								for _,m in ipairs(t) do
@@ -1056,13 +1077,14 @@ function processCode(code)
 							-- if the x position uses some calculation
 							if not tonumber(tokens[1]) then
 								-- replace all refences to the width value with the word 'width'
+								-- width is a global set in the position code (top of this file)
 								tokens[1] = string.gsub(tokens[1], "[^%d]"..tokens[3].."[^%d]", 
 									function(m)
 										return m:sub(1, 1) .. "width" .. m:sub(-1)
 									end
 								)
 							end
-							
+
 							if not tonumber(tokens[2]) then
 								tokens[2] = string.gsub(tokens[2], "[^%d]"..tokens[4].."[^%d]", 
 									function(m)
@@ -1071,7 +1093,8 @@ function processCode(code)
 								)
 							end
 						end
-						
+
+						--code = string.overwrite(code, "{'" .. table.concat(tokens, "','") .. "'}," .. table.concat(tokens, ",") .. ",", matchE, lastE - 1)
 						code = string.insert(code, "{'" .. table.concat(tokens, "','") .. "'},", matchE)
 					end
 				end

@@ -1256,7 +1256,13 @@ function createItem_resizeImage()
 					if not exists(element) then
 						return false
 					end
-
+					
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if dx then
+						return dx.dxType == gDXTypes.image
+					end
+					
 					return getElementType(element) == "gui-staticimage"
 				end,
 			conditionArgs = {"__gui"}

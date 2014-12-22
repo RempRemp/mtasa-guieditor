@@ -547,7 +547,7 @@ function generateCode_common(element)
 end	
 
 
-function generateCode_commonDX(element, dx, recursive)
+function generateCode_commonDX(element, dx, recursive, offset)
 	local common = {}
 	
 	if not recursive then
@@ -556,19 +556,21 @@ function generateCode_commonDX(element, dx, recursive)
 			local eW, eH = guiGetSize(element, false)
 			
 			if dx.dxType == gDXTypes.text then
-				local e = guiCreateLabel(eX + 1, eY + 1, eW, eH, "", false)
-						
-				common.shadow = generateCode_commonDX(e, dx, true)
+				local e = guiCreateLabel(eX, eY, eW, eH, "", false)
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))			
+				common.shadow = generateCode_commonDX(e, dx, true, gDXAnchor.bottomRight)
 				destroyElement(e)
 			elseif dx.dxType == gDXTypes.rectangle then
 				-- >
-				local e = guiCreateLabel(eX - 1, eY + eH, eW + 1, 0, "", false)					
-				common.shadow1 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomLeft}, true)
+				local e = guiCreateLabel(eX, eY + eH, eW, 0, "", false)		
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))				
+				common.shadow1 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomLeft}, true, true)
 				destroyElement(e)
 				
 				-- ^
-				e = guiCreateLabel(eX + eW, eY - 1, 0, eH + 1, "", false)					
-				common.shadow2 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomRight}, true)
+				e = guiCreateLabel(eX + eW, eY, 0, eH, "", false)	
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))
+				common.shadow2 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomRight}, true, true)
 				destroyElement(e)
 			end			
 		end
@@ -579,40 +581,36 @@ function generateCode_commonDX(element, dx, recursive)
 			
 			if dx.dxType == gDXTypes.rectangle then
 				-- \/
-				local e = guiCreateLabel(eX - 1, eY - 1, 0, eH + 1, "", false)					
-				common.outline1 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.topLeft}, true)
+				local e = guiCreateLabel(eX, eY, 0, eH, "", false)		
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))
+				common.outline1 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.topLeft}, true, true)
 				destroyElement(e)	
 
 				-- <
-				e = guiCreateLabel(eX - 1, eY - 1, eW + 1, 0, "", false)					
-				common.outline2 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.topRight}, true)
+				e = guiCreateLabel(eX, eY, eW, 0, "", false)				
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))				
+				common.outline2 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.topRight}, true, true)
 				destroyElement(e)					
 
 				-- >
-				e = guiCreateLabel(eX - 1, eY + eH, eW + 1, 0, "", false)					
-				common.outline3 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomLeft}, true)
+				e = guiCreateLabel(eX, eY + eH, eW, 0, "", false)	
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))
+				common.outline3 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomLeft}, true, true)
 				destroyElement(e)
 				
 				-- ^
-				e = guiCreateLabel(eX + eW, eY - 1, 0, eH + 1, "", false)					
-				common.outline4 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomRight}, true)
+				e = guiCreateLabel(eX + eW, eY, 0, eH, "", false)	
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))
+				common.outline4 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomRight}, true, true)
 				destroyElement(e)	
 			elseif dx.dxType == gDXTypes.text then				
-				--	4 --- 2
-				--	|     |
-				--	|     |
-				--	3 --- 1		
-
-				-- 1:   1	  1
-				-- 2:   1	 -1
-				-- 3:  -1	  1
-				-- 4:  -1	 -1				
-				
-				for i = 1, 4 do
-					local e = guiCreateLabel(eX + (i < 3 and 1 or -1), eY + (((i * 2) % 4) - 1), eW, eH, "", false)					
-					common["outline" .. i] = generateCode_commonDX(e, dx, true)
-					destroyElement(e)						
-				end
+				local e = guiCreateLabel(eX, eY, eW, eH, "", false)		
+				setElementData(e, "guieditor:relative", getElementData(element, "guieditor:relative"))
+				common.outline1 = generateCode_commonDX(e, dx, true, gDXAnchor.topLeft)
+				common.outline2 = generateCode_commonDX(e, dx, true, gDXAnchor.topRight)
+				common.outline3 = generateCode_commonDX(e, dx, true, gDXAnchor.bottomLeft)
+				common.outline4 = generateCode_commonDX(e, dx, true, gDXAnchor.bottomRight)
+				destroyElement(e)				
 			end
 		end
 	end
@@ -681,59 +679,167 @@ function generateCode_commonDX(element, dx, recursive)
 				
 			if getElementData(element, "guieditor:relative") then
 				if dx.anchor == gDXAnchor.topLeft then
-					common.position = string.format(
-						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
-						x / gScreen.x, 
-						y / gScreen.y,
-						(x + w) / gScreen.x,
-						(y + h) / gScreen.y
-					)
+					if not offset then
+						-- standard
+						common.position = string.format(
+							"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+							x / gScreen.x, 
+							y / gScreen.y,
+							(x + w) / gScreen.x,
+							(y + h) / gScreen.y
+						)					
+					else
+						-- offset (e.g. outline or shadow)
+						common.position = string.format(
+							"(screenW * " .. gDXNumberFormat .. ") - 1, (screenH * " .. gDXNumberFormat .. ") - 1, (screenW * " .. gDXNumberFormat .. ") - 1, screenH * " .. gDXNumberFormat .. "", 
+							x / gScreen.x, 
+							y / gScreen.y,
+							(x + w) / gScreen.x,
+							(y + h) / gScreen.y
+						)
+					end
 					--common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
 				elseif dx.anchor == gDXAnchor.topRight then
-					common.position = string.format(
-						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
-						(x + w) / gScreen.x, 
-						y / gScreen.y,
-						x / gScreen.x,
-						(y + h) / gScreen.y
-					)
+					if not offset then
+						common.position = string.format(
+							"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+							(x + w) / gScreen.x, 
+							y / gScreen.y,
+							x / gScreen.x,
+							(y + h) / gScreen.y
+						)
+					else
+						common.position = string.format(
+							"screenW * " .. gDXNumberFormat .. ", (screenH * " .. gDXNumberFormat .. ") - 1, (screenW * " .. gDXNumberFormat .. ") - 1, (screenH * " .. gDXNumberFormat .. ") - 1", 
+							(x + w) / gScreen.x, 
+							y / gScreen.y,
+							x / gScreen.x,
+							(y + h) / gScreen.y
+						)					
+					end
 					--common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
 				elseif dx.anchor == gDXAnchor.bottomLeft then
-					common.position = string.format(
-						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
-						x / gScreen.x, 
-						(y + h) / gScreen.y,
-						(x + w) / gScreen.x,
-						y / gScreen.y
-					)				
+					if not offset then
+						common.position = string.format(
+							"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+							x / gScreen.x, 
+							(y + h) / gScreen.y,
+							(x + w) / gScreen.x,
+							y / gScreen.y
+						)		
+					else
+						common.position = string.format(
+							"(screenW * " .. gDXNumberFormat .. ") - 1, screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. "", 
+							x / gScreen.x, 
+							(y + h) / gScreen.y,
+							(x + w) / gScreen.x,
+							y / gScreen.y
+						)							
+					end
 					--common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
 				elseif dx.anchor == gDXAnchor.bottomRight then
-					common.position = string.format(
-						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
-						(x + w) / gScreen.x, 
-						(y + h) / gScreen.y,
-						x / gScreen.x,
-						y / gScreen.y
-					)
+					if not offset then
+						common.position = string.format(
+							"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
+							(x + w) / gScreen.x, 
+							(y + h) / gScreen.y,
+							x / gScreen.x,
+							y / gScreen.y
+						)
+					else
+						common.position = string.format(
+							"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", (screenH * " .. gDXNumberFormat .. ") - 1", 
+							(x + w) / gScreen.x, 
+							(y + h) / gScreen.y,
+							x / gScreen.x,
+							y / gScreen.y
+						)
+					end
 					--common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
 				end	
 			else
 				if dx.anchor == gDXAnchor.topLeft then
-					common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
+					-- offset indicates outline or shadow
+					if not offset then
+						common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
+					else
+						common.position = x .. " - 1, " .. y .. " - 1, " .. (x + w) .. " - 1, " .. (y + h)
+					end
 				elseif dx.anchor == gDXAnchor.topRight then
-					common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
+					if not offset then
+						common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
+					else
+						common.position = (x + w) .. ", " .. y .. " - 1, " .. x .. " - 1, " .. (y + h) .. " - 1"
+					end
 				elseif dx.anchor == gDXAnchor.bottomLeft then
-					common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
+					if not offset then
+						common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
+					else
+						common.position = x .. " - 1, " .. (y + h) .. ", " .. (x + w) .. ", " .. y
+					end
 				elseif dx.anchor == gDXAnchor.bottomRight then
-					common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
+					if not offset then
+						common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
+					else
+						common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y .. " - 1"
+					end
 				end	
 			end
 		elseif dx.dxType == gDXTypes.text then
 			if getElementData(element, "guieditor:relative") then
-				common.size = string.format("screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, (x + w) / gScreen.x, (y + h) / gScreen.y)
+				if not offset then
+					common.size = string.format("screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, (x + w) / gScreen.x, (y + h) / gScreen.y)
+				elseif offset == gDXAnchor.topLeft then
+					common.size = string.format("(screenW * " .. gDXNumberFormat .. ") - 1, (screenH * " .. gDXNumberFormat .. ") - 1", (x + w) / gScreen.x, (y + h) / gScreen.y)
+				elseif offset == gDXAnchor.topRight then
+					common.size = string.format("(screenW * " .. gDXNumberFormat .. ") + 1, (screenH * " .. gDXNumberFormat .. ") - 1", (x + w) / gScreen.x, (y + h) / gScreen.y)
+				elseif offset == gDXAnchor.bottomLeft then
+					common.size = string.format("(screenW * " .. gDXNumberFormat .. ") - 1, (screenH * " .. gDXNumberFormat .. ") + 1", (x + w) / gScreen.x, (y + h) / gScreen.y)
+				elseif offset == gDXAnchor.bottomRight then
+					common.size = string.format("(screenW * " .. gDXNumberFormat .. ") + 1, (screenH * " .. gDXNumberFormat .. ") + 1", (x + w) / gScreen.x, (y + h) / gScreen.y)							
+				end	
+			
 				Generation.usingScreenSizeForDX = true
 			else
-				common.size = x + w .. ", " .. y + h			
+				if not offset then
+					common.size = x + w .. ", " .. y + h	
+				elseif offset == gDXAnchor.topLeft then
+					common.size = x + w .. " - 1, " .. y + h .. " - 1"
+				elseif offset == gDXAnchor.topRight then
+					common.size = x + w .. " + 1, " .. y + h .. " - 1"
+				elseif offset == gDXAnchor.bottomLeft then
+					common.size = x + w .. " - 1, " .. y + h .. " + 1"
+				elseif offset == gDXAnchor.bottomRight then
+					common.size = x + w .. " + 1, " .. y + h .. " + 1"		
+				end					
+			end
+			
+			if getElementData(element, "guieditor:relative") then
+				if not offset then
+					common.position = string.format("screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, x / gScreen.x, y / gScreen.y)
+				elseif offset == gDXAnchor.topLeft then
+					common.position = string.format("(screenW * " .. gDXNumberFormat .. ") - 1, (screenH * " .. gDXNumberFormat .. ") - 1", x / gScreen.x, y / gScreen.y)
+				elseif offset == gDXAnchor.topRight then
+					common.position = string.format("(screenW * " .. gDXNumberFormat .. ") + 1, (screenH * " .. gDXNumberFormat .. ") - 1", x / gScreen.x, y / gScreen.y)
+				elseif offset == gDXAnchor.bottomLeft then
+					common.position = string.format("(screenW * " .. gDXNumberFormat .. ") - 1, (screenH * " .. gDXNumberFormat .. ") + 1", x / gScreen.x, y / gScreen.y)
+				elseif offset == gDXAnchor.bottomRight then
+					common.position = string.format("(screenW * " .. gDXNumberFormat .. ") + 1, (screenH * " .. gDXNumberFormat .. ") + 1", x / gScreen.x, y / gScreen.y)				
+				end
+				
+				Generation.usingScreenSizeForDX = true			
+			else
+				if not offset then
+					common.position = x .. ", ".. y
+				elseif offset == gDXAnchor.topLeft then
+					common.position = x .. " - 1, ".. y .. " - 1"
+				elseif offset == gDXAnchor.topRight then
+					common.position = x .. " + 1, ".. y .. " - 1"
+				elseif offset == gDXAnchor.bottomLeft then
+					common.position = x .. " - 1, ".. y .. " + 1"
+				elseif offset == gDXAnchor.bottomRight then
+					common.position = x .. " + 1, ".. y .. " + 1"		
+				end				
 			end
 		end
 	end
