@@ -27,7 +27,8 @@
 		- add undo/redo actions for gridlist options
 		
 	Changes:
-	
+		- Fixed problem with the "Automatically resize output window" setting when generating DX code
+		- Changed "Shadow" and "Outline" options of DX Rectangles to use DX lines rather than drawing an offset rectangle
 --]]--------------------------------------------------
 
 gEnabled = false

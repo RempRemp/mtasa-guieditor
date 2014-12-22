@@ -74,9 +74,17 @@ function Generation.generateCode()
 			
 			-- no point doing both, check outline first since it encompases shadow anyway
 			if dx:outline() then
-				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.outline.position, dxCommon.outline.size, 0, 0, 0, 255, tostring(dx.postGUI_))	
+				--dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.outline.position, dxCommon.outline.size, 0, 0, 0, 255, tostring(dx.postGUI_))	
+			
+				for i = 1, 4 do
+					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon["outline" .. i].position, 0, 0, 0, 255, 1, tostring(dx.postGUI_))
+				end				
 			elseif dx:shadow() then
-				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.shadow.position, dxCommon.size, 0, 0, 0, 255, tostring(dx.postGUI_))
+				--dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.shadow.position, dxCommon.size, 0, 0, 0, 255, tostring(dx.postGUI_))
+			
+				for i = 1, 2 do
+					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon["shadow" .. i].position, 0, 0, 0, 255, 1, tostring(dx.postGUI_))
+				end					
 			end	
 			
 			dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.position, dxCommon.size, dx.colour_[1], dx.colour_[2], dx.colour_[3], dx.colour_[4], tostring(dx.postGUI_))
@@ -111,6 +119,16 @@ function Generation.generateCode()
 			dxcodePrefix = dxcodePrefix .. tostring(dxCommon.fontCreationString)
 		end
 	end	
+	
+	if Settings.loaded.output_window_autosize.value then
+		for i,l in ipairs(string.lines(dxcode)) do
+			local w = dxGetTextWidth(l)
+
+			if w > Generation.biggestWidth then
+				Generation.biggestWidth = w
+			end
+		end
+	end
 	
 	if Generation.usingScreenSizeForDX and not Generation.usingScreenSize then
 		dxcodePrefix = dxcodePrefix .. "\nlocal screenW, screenH = guiGetScreenSize()"
@@ -362,14 +380,16 @@ function Generation.generateElementCode(element)
 			code = code:gsub("\n", "\n" .. string.rep(Generation.indent, 2))
 		end
 		
-		for i,l in ipairs(string.lines(code)) do
-			local w = dxGetTextWidth(l)
+		if Settings.loaded.output_window_autosize.value then
+			for i,l in ipairs(string.lines(code)) do
+				local w = dxGetTextWidth(l)
 
-			if w > Generation.biggestWidth then
-				Generation.biggestWidth = w
+				if w > Generation.biggestWidth then
+					Generation.biggestWidth = w
+				end
 			end
 		end
-	
+		
 		return code
 	end
 	
@@ -534,10 +554,23 @@ function generateCode_commonDX(element, dx, recursive)
 		if dx:shadow() ~= nil then
 			local eX, eY = guiGetPosition(element, false)
 			local eW, eH = guiGetSize(element, false)
-			local e = guiCreateLabel(eX + 1, eY + 1, eW, eH, "", false)
-					
-			common.shadow = generateCode_commonDX(e, dx, true)
-			destroyElement(e)
+			
+			if dx.dxType == gDXTypes.text then
+				local e = guiCreateLabel(eX + 1, eY + 1, eW, eH, "", false)
+						
+				common.shadow = generateCode_commonDX(e, dx, true)
+				destroyElement(e)
+			elseif dx.dxType == gDXTypes.rectangle then
+				-- >
+				local e = guiCreateLabel(eX - 1, eY + eH, eW + 1, 0, "", false)					
+				common.shadow1 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomLeft}, true)
+				destroyElement(e)
+				
+				-- ^
+				e = guiCreateLabel(eX + eW, eY - 1, 0, eH + 1, "", false)					
+				common.shadow2 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomRight}, true)
+				destroyElement(e)
+			end			
 		end
 		
 		if dx:outline() ~= nil then
@@ -545,9 +578,25 @@ function generateCode_commonDX(element, dx, recursive)
 			local eW, eH = guiGetSize(element, false)
 			
 			if dx.dxType == gDXTypes.rectangle then
-				local e = guiCreateLabel(eX - 1, eY - 1, eW + 2, eH + 2, "", false)					
-				common.outline = generateCode_commonDX(e, dx, true)
+				-- \/
+				local e = guiCreateLabel(eX - 1, eY - 1, 0, eH + 1, "", false)					
+				common.outline1 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.topLeft}, true)
+				destroyElement(e)	
+
+				-- <
+				e = guiCreateLabel(eX - 1, eY - 1, eW + 1, 0, "", false)					
+				common.outline2 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.topRight}, true)
+				destroyElement(e)					
+
+				-- >
+				e = guiCreateLabel(eX - 1, eY + eH, eW + 1, 0, "", false)					
+				common.outline3 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomLeft}, true)
 				destroyElement(e)
+				
+				-- ^
+				e = guiCreateLabel(eX + eW, eY - 1, 0, eH + 1, "", false)					
+				common.outline4 = generateCode_commonDX(e, {dxType = gDXTypes.line, anchor = gDXAnchor.bottomRight}, true)
+				destroyElement(e)	
 			elseif dx.dxType == gDXTypes.text then				
 				--	4 --- 2
 				--	|     |
@@ -629,16 +678,9 @@ function generateCode_commonDX(element, dx, recursive)
 		
 		if dx.dxType == gDXTypes.line then
 			common.position = common.position .. ", " .. common.size
-			
-			--[[
-			1 ------ 2
-			|        |
-			|        |
-			3 ------ 4
-			]]
 				
 			if getElementData(element, "guieditor:relative") then
-				if dx.anchor == 1 then
+				if dx.anchor == gDXAnchor.topLeft then
 					common.position = string.format(
 						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
 						x / gScreen.x, 
@@ -647,7 +689,7 @@ function generateCode_commonDX(element, dx, recursive)
 						(y + h) / gScreen.y
 					)
 					--common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
-				elseif dx.anchor == 2 then
+				elseif dx.anchor == gDXAnchor.topRight then
 					common.position = string.format(
 						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
 						(x + w) / gScreen.x, 
@@ -656,7 +698,7 @@ function generateCode_commonDX(element, dx, recursive)
 						(y + h) / gScreen.y
 					)
 					--common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
-				elseif dx.anchor == 3 then
+				elseif dx.anchor == gDXAnchor.bottomLeft then
 					common.position = string.format(
 						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
 						x / gScreen.x, 
@@ -665,7 +707,7 @@ function generateCode_commonDX(element, dx, recursive)
 						y / gScreen.y
 					)				
 					--common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
-				elseif dx.anchor == 4 then
+				elseif dx.anchor == gDXAnchor.bottomRight then
 					common.position = string.format(
 						"screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat .. ", screenW * " .. gDXNumberFormat .. ", screenH * " .. gDXNumberFormat, 
 						(x + w) / gScreen.x, 
@@ -676,13 +718,13 @@ function generateCode_commonDX(element, dx, recursive)
 					--common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
 				end	
 			else
-				if dx.anchor == 1 then
+				if dx.anchor == gDXAnchor.topLeft then
 					common.position = x .. ", " .. y .. ", " .. (x + w) .. ", " .. (y + h)
-				elseif dx.anchor == 2 then
+				elseif dx.anchor == gDXAnchor.topRight then
 					common.position = (x + w) .. ", " .. y .. ", " .. x .. ", " .. (y + h)
-				elseif dx.anchor == 3 then
+				elseif dx.anchor == gDXAnchor.bottomLeft then
 					common.position = x .. ", " .. (y + h) .. ", " .. (x + w) .. ", " .. y
-				elseif dx.anchor == 4 then
+				elseif dx.anchor == gDXAnchor.bottomRight then
 					common.position = (x + w) .. ", " .. (y + h) .. ", " .. x .. ", " .. y
 				end	
 			end

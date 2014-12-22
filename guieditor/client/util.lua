@@ -657,3 +657,64 @@ end
 function math.round(value)
 	return math.floor(value + 0.5)
 end
+
+
+Group = {}
+Group.__index = Group
+
+Group.addOrCreate = 
+	function(groups, item, value)
+		local placed = false
+		
+		for _, group in ipairs(groups) do
+			if group:add(item, value) then
+				placed = true
+				break
+			end
+		end
+
+		if not placed then	
+			groups[#groups + 1] = Group:create(item, value)
+		end		
+	end
+
+function Group:create(item, value)
+	local new = setmetatable(
+		{
+			items = {}
+		},
+		Group
+	)
+	
+	if item ~= nil and value ~= nil then
+		new:add(item, value)
+	end
+	
+	return new
+end
+
+function Group:add(item, value)
+	if not self.items[item] then
+		self.items[item] = value
+		
+		return true
+	end
+	
+	return false
+end	
+
+function Group:contains(item, value)
+	for i, v in pairs(self.items) do
+		if (item ~= nil and item == i) then
+			return true
+		end
+		
+		if (value ~= nil and value == v) then
+			return true
+		end
+	end
+end
+
+function Group:count() 
+	return table.count(self.items)
+end

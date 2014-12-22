@@ -8,6 +8,7 @@
 
 
 gDXTypes = {line = 1, rectangle = 2, image = 3, text = 4}
+gDXAnchor = {topLeft = 1, topRight = 2, bottomLeft = 3, bottomRight = 4}
 local gDXTypeString = {"dx_line", "dx_rectangle", "dx_image", "dx_text"}
 local gDXTypeFriendlyString = {"DX Line", "DX Rectangle", "DX Image", "DX Text"}
 
@@ -356,7 +357,7 @@ function DX_Line:create(startX, startY, endX, endY, colour, width, postGUI, elem
 	item.colour_ = colour
 	item.postGUI_ = postGUI
 	item.dxType = gDXTypes.line
-	item.anchor = 1
+	item.anchor = gDXAnchor.topLeft
 	item.element = element
 
 	item = setmetatable(item, {__index = DX_Line})
@@ -368,15 +369,15 @@ end
 function DX_Line:recalculateGUIPosition()		
 	if self.startX <= self.endX then
 		if self.startY <= self.endY then
-			self.anchor = 1
+			self.anchor = gDXAnchor.topLeft
 		else
-			self.anchor = 3
+			self.anchor = gDXAnchor.bottomLeft
 		end
 	else
 		if self.startY <= self.endY then
-			self.anchor = 2
+			self.anchor = gDXAnchor.topRight
 		else
-			self.anchor = 4
+			self.anchor = gDXAnchor.bottomRight
 		end					
 	end	
 	
@@ -542,13 +543,17 @@ end
 
 
 function DX_Rectangle:match(other)
-	return self.dxType == other.dxType and
-			self.postGUI_ == other.postGUI_
+	return (self.dxType == other.dxType and
+			self.postGUI_ == other.postGUI_) or 
+			(other.dxType == gDXTypes.line and
+			self.postGUI_ == other.postGUI_)
 end
 
 
 function DX_Rectangle:isShadow(other)
-	return self.x == other.x - 1 and 
+	--[[
+	return self.dxType == other.dxType and
+			self.x == other.x - 1 and 
 			self.y == other.y - 1 and
 			self.width == other.width and 
 			self.height == other.height and
@@ -556,10 +561,37 @@ function DX_Rectangle:isShadow(other)
 			other.colour_[2] == 0 and 
 			other.colour_[3] == 0 and 
 			other.colour_[4] == 255
+	]]
+	
+	if other.dxType == gDXTypes.line and
+			other.colour_[1] == 0 and
+			other.colour_[2] == 0 and 
+			other.colour_[3] == 0 and 
+			other.colour_[4] == 255 then
+			
+				 -- bottomLeft >
+			if (self.x - 1 == other.startX and 
+				 self.y + self.height == other.startY and
+				 self.x + self.width == other.endX and
+				 self.y + self.height == other.endY) then 	
+				return gDXAnchor.bottomLeft
+			end
+			
+				 -- bottomRight ^
+			if (self.x + self.width == other.startX and 
+				 self.y + self.height == other.startY and
+				 self.x + self.width == other.endX and
+				 self.y - 1 == other.endY) then 
+				return gDXAnchor.bottomRight
+			end
+	end
+	
+	return	
 end
 
 
 function DX_Rectangle:isOutline(other)
+	--[[ rectangle
 	return self.x == other.x + 1 and
 			self.y == other.y + 1 and
 			self.width == other.width - 2 and
@@ -568,6 +600,48 @@ function DX_Rectangle:isOutline(other)
 			other.colour_[2] == 0 and 
 			other.colour_[3] == 0 and 
 			other.colour_[4] == 255
+	]]
+	
+	if other.dxType == gDXTypes.line and
+			other.colour_[1] == 0 and
+			other.colour_[2] == 0 and 
+			other.colour_[3] == 0 and 
+			other.colour_[4] == 255 then
+			
+				-- topLeft \/
+			if (self.x - 1 == other.startX and 
+				 self.y - 1 == other.startY and
+				 self.x - 1 == other.endX and
+				 self.y + self.height == other.endY) then
+				return gDXAnchor.topLeft
+			end
+				
+				 -- topRight <
+			if (self.x + self.width == other.startX and 
+				 self.y - 1 == other.startY and
+				 self.x - 1 == other.endX and
+				 self.y - 1 == other.endY) then 
+				return gDXAnchor.topRight
+			end
+			
+				 -- bottomLeft >
+			if (self.x - 1 == other.startX and 
+				 self.y + self.height == other.startY and
+				 self.x + self.width == other.endX and
+				 self.y + self.height == other.endY) then 	
+				return gDXAnchor.bottomLeft
+			end
+			
+				 -- bottomRight ^
+			if (self.x + self.width == other.startX and 
+				 self.y + self.height == other.startY and
+				 self.x + self.width == other.endX and
+				 self.y - 1 == other.endY) then 
+				return gDXAnchor.bottomRight
+			end
+	end
+	
+	return
 end
 
 
@@ -868,11 +942,23 @@ addEventHandler("onClientRender", root,
 				dxDrawLine(dx.startX, dx.startY, dx.endX, dx.endY, tocolor(unpack(dx.colour_)), dx.width, dx.postGUI_)
 			elseif dx.dxType == gDXTypes.rectangle then
 				if dx:shadow() then
-					dxDrawRectangle(dx.x + 1, dx.y + 1, dx.width, dx.height, tocolor(0, 0, 0, 255), dx.postGUI_)
+					--dxDrawRectangle(dx.x + 1, dx.y + 1, dx.width, dx.height, tocolor(0, 0, 0, 255), dx.postGUI_)
+					-- bottom
+					dxDrawLine(dx.x - 1, dx.y + dx.height, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					-- right
+					dxDrawLine(dx.x + dx.width, dx.y - 1, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)					
 				end
 				
 				if dx:outline() then
-					dxDrawRectangle(dx.x - 1, dx.y - 1, dx.width + 2, dx.height + 2, tocolor(0, 0, 0, 255), dx.postGUI_)
+					--dxDrawRectangle(dx.x - 1, dx.y - 1, dx.width + 2, dx.height + 2, tocolor(0, 0, 0, 255), dx.postGUI_)
+					-- left
+					dxDrawLine(dx.x - 1, dx.y - 1, dx.x - 1, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					-- bottom
+					dxDrawLine(dx.x - 1, dx.y + dx.height, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					-- right
+					dxDrawLine(dx.x + dx.width, dx.y - 1, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					-- top
+					dxDrawLine(dx.x - 1, dx.y - 1, dx.x + dx.width, dx.y - 1, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
 				end
 				
 				dxDrawRectangle(dx.x, dx.y, dx.width, dx.height, tocolor(unpack(dx.colour_)), dx.postGUI_)
@@ -917,22 +1003,22 @@ addEventHandler("onClientGUISize", root,
 			local w, h = guiGetSize(source, false)
 
 			if dx.dxType == gDXTypes.line then
-				if dx.anchor == 1 then
+				if dx.anchor == gDXAnchor.topLeft then
 					dx.startX = x
 					dx.startY = y
 					dx.endX = x + w
 					dx.endY = y + h
-				elseif dx.anchor == 2 then
+				elseif dx.anchor == gDXAnchor.topRight then
 					dx.startX = x + w
 					dx.startY = y
 					dx.endX = x
 					dx.endY = y + h
-				elseif dx.anchor == 3 then
+				elseif dx.anchor == gDXAnchor.bottomLeft then
 					dx.startX = x
 					dx.startY = y + h
 					dx.endX = x + w
 					dx.endY = y
-				elseif dx.anchor == 4 then
+				elseif dx.anchor == gDXAnchor.bottomRight then
 					dx.startX = x + w
 					dx.startY = y + h
 					dx.endX = x
@@ -970,22 +1056,22 @@ addEventHandler("onClientGUIMove", root,
 				3 ------ 4
 				]]
 
-				if dx.anchor == 1 then
+				if dx.anchor == gDXAnchor.topLeft then
 					dx.startX = x
 					dx.startY = y
 					dx.endX = x + w
 					dx.endY = y + h
-				elseif dx.anchor == 2 then
+				elseif dx.anchor == gDXAnchor.topRight then
 					dx.startX = x + w
 					dx.startY = y
 					dx.endX = x
 					dx.endY = y + h
-				elseif dx.anchor == 3 then
+				elseif dx.anchor == gDXAnchor.bottomLeft then
 					dx.startX = x
 					dx.startY = y + h
 					dx.endX = x + w
 					dx.endY = y
-				elseif dx.anchor == 4 then
+				elseif dx.anchor == gDXAnchor.bottomRight then
 					dx.startX = x + w
 					dx.startY = y + h
 					dx.endX = x
