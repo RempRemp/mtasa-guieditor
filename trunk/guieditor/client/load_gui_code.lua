@@ -861,8 +861,6 @@ function loadGUICode(code)
 		outputDebug("loadGUICode running error: "..tostring(e))
 		return false, tostring(e)
 	end
-	
-
 
 	-- erase the variables used in the code, and set the correct element variables (using the same naming structure)
 	for a,b in pairs(variables) do
@@ -1102,56 +1100,43 @@ function processDXEffects(preLoadDXCount)
 				
 				if dx.dxType == gDXTypes.rectangle or dx.dxType == gDXTypes.text then
 					local shadow, outline = {}, {}
-									
+					
+					-- loop the remaining dx elements and see if any are effects for the current dx element (i)
 					for k = (i - 1), (preLoadDXCount + 1), -1 do
 						local other = DX_Element.instances[k]
 						
 						if dx:match(other) then
+							-- does (other) match an effect pattern for (i)
 							if dx.dxType == gDXTypes.rectangle then
-								if dx:isOutline(other) then
-									outline[#outline + 1] = k
-									outputDebug("Found ".. i .." outline: " .. k, "TEXT_EFFECT_LOAD")
-								elseif dx:isShadow(other) then
-									shadow[#shadow + 1] = k
-									outputDebug("Found ".. i .." shadow: " .. k, "TEXT_EFFECT_LOAD")
+								local outlineCorner = dx:isOutline(other)
+								local shadowCorner = dx:isShadow(other)
+								
+								if outlineCorner then
+									-- Group is defined in util.lua
+									Group.addOrCreate(outline, outlineCorner, k)
+									--outputDebug("Found ".. i .." outline: " .. k .. "(" .. outlineCorner .. ", " .. table.count(outline)..")", "TEXT_EFFECT_LOAD")
+								end
+								
+								if shadowCorner then
+									--shadow[#shadow + 1] = k
+									Group.addOrCreate(shadow, shadowCorner, k)
+									--outputDebug("Found ".. i .." shadow: " .. k, "TEXT_EFFECT_LOAD")
 								end
 							elseif dx.dxType == gDXTypes.text then
 								local corner = dx:isOutline(other)
 								
 								if corner then
-									local slotted = false
-									
-									-- if there is an existing group without this corner, put it into that
-									for outID, outGroup in ipairs(outline) do
-										if not outGroup[corner] then
-											outline[outID][corner] = k
-											slotted = true
-										end
-									end
-									
-									-- otherwise, make a new group
-									if not slotted then
-										outline[#outline + 1] = {[corner] = k}
-									end
-									
-									outputDebug("Found ".. i .." outline part: " .. k .. "[".. corner .. "]", "TEXT_EFFECT_LOAD")
+									Group.addOrCreate(outline, corner, k)
+									--outputDebug("Found ".. i .." outline part: " .. k .. "[".. corner .. "]", "TEXT_EFFECT_LOAD")
 								end
 								
 								if dx:isShadow(other) then
 									shadow[#shadow + 1] = k
-									outputDebug("Found ".. i .." shadow: " .. k, "TEXT_EFFECT_LOAD")
+									--outputDebug("Found ".. i .." shadow: " .. k, "TEXT_EFFECT_LOAD")
 								end							
 							end
 						end
-					end
-					
-					if #shadow > 0 then
-						for _,id in ipairs(shadow) do
-							removal[id] = true
-						end
-						
-						dx.shadow_ = true
-					end
+					end	
 					
 					if #outline > 0 then
 						local removed = false
@@ -1161,17 +1146,60 @@ function processDXEffects(preLoadDXCount)
 								removal[id] = true
 								removed = true
 							elseif type(id) == "table" then
-								-- only remove them if we found all 4 corners
-								if #id == 4 then
-									for _, otherID in ipairs(id) do
+								-- only remove them if we found all 4 corners, "id" is a Group type
+								if id:count() == 4 then
+									for _, otherID in pairs(id.items) do
 										removal[otherID] = true
 										removed = true
 									end
+									
+									--outputDebug("Found ".. i .." full outline", "TEXT_EFFECT_LOAD")
+								else
+									--outputDebug("Found ".. i .." partial outline: " .. id:count(), "TEXT_EFFECT_LOAD")
 								end
 							end
 						end
 						
 						dx.outline_ = removed
+					end
+					
+					if #shadow > 0 then
+						local removed = false
+						
+						for _,id in ipairs(shadow) do
+							if type(id) == "number" then
+								if not removal[id] then
+									removal[id] = true
+									removed = true
+								end
+							elseif type(id) == "table" then
+								-- only remove them if we found the correct 2 corners, "id" is a Group type
+								if id:count() == 2 and id:contains(gDXAnchor.bottomLeft) and id:contains(gDXAnchor.bottomRight) then
+									local usingValidCorners = true
+									
+									-- this ensures we aren't using corners that have already been flagged as part of a valid outline
+									for _, otherID in pairs(id.items) do
+										if removal[otherID] then
+											usingValidCorners = false
+											break
+										end
+									end	
+										
+									if usingValidCorners then
+										for _, otherID in pairs(id.items) do
+											removal[otherID] = true
+											removed = true
+										end
+
+										--outputDebug("Found ".. i .." full shadow", "TEXT_EFFECT_LOAD")
+									end
+								else
+									--outputDebug("Found ".. i .." partial shadow", "TEXT_EFFECT_LOAD")
+								end
+							end
+						end
+	
+						dx.shadow_ = removed
 					end
 				end
 			end

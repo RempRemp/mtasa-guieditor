@@ -21,7 +21,7 @@ _DEBUG_CATEGORIES = {
 	LOAD_CODE_INTERNAL = false,
 	POSITION_CODER = false,
 	MENU_ITEM = false,
-	TEXT_EFFECT_LOAD = false,
+	TEXT_EFFECT_LOAD = true,
 	UNDO_REDO_CONDITION = false
 }
 
