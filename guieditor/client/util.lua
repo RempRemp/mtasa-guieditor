@@ -431,6 +431,10 @@ function string.insert(s, insert, pos)
 	return string.sub(s, 0, pos) .. tostring(insert) .. string.sub(s, pos + 1)
 end
 
+function string.overwrite(s, insert, startPos, endPos)
+	return string.sub(s, 0, startPos) .. tostring(insert) .. string.sub(s, endPos + 1)
+end
+
 
 function string.trim(s)
 	return s:match('^()%s*$') and '' or s:match('^%s*(.*%S)')

@@ -769,20 +769,6 @@ function DX_Text:create(text, x, y, width, height, colour, scale, font, alignX, 
 end
 
 
-function DX_Text:match(other)
-	return self.text_ == other.text_ and
-			self.scale_ == other.scale_ and
-			self.font_ == other.font_ and
-			self.alignX_ == other.alignX_ and
-			self.alignY_ == other.alignY_ and
-			self.clip_ == other.clip_ and
-			self.wordwrap_ == other.wordwrap_ and
-			self.postGUI_ == other.postGUI_ and
-			self.colourCoded_ == other.colourCoded_ and
-			self.subPixelPositioning == other.subPixelPositioning
-end
-
-
 function DX_Text:text(value)
 	if value then
 		self.text_ = value
@@ -883,6 +869,20 @@ function DX_Text:colourCoded(value)
 end	
 
 
+function DX_Text:match(other)
+	return self.text_ == other.text_ and
+			self.scale_ == other.scale_ and
+			self.font_ == other.font_ and
+			self.alignX_ == other.alignX_ and
+			self.alignY_ == other.alignY_ and
+			self.clip_ == other.clip_ and
+			self.wordwrap_ == other.wordwrap_ and
+			self.postGUI_ == other.postGUI_ and
+			self.colourCoded_ == other.colourCoded_ and
+			self.subPixelPositioning == other.subPixelPositioning
+end
+
+
 function DX_Text:isShadow(other)
 	return self.x == other.x - 1 and 
 			self.y == other.y - 1 and
@@ -896,7 +896,12 @@ end
 
 
 function DX_Text:isOutline(other)
-	if other.colour_[1] == 0 and other.colour_[2] == 0 and other.colour_[3] == 0 and other.colour_[4] == 255 and self.width == other.width and self.height == other.height then
+	if other.colour_[1] == 0 and 
+		other.colour_[2] == 0 and 
+		other.colour_[3] == 0 and 
+		other.colour_[4] == 255 and 
+		self.width == other.width and 
+		self.height == other.height then
 		if self.x == other.x + 1 and self.y == other.y + 1 then
 			return 1
 		elseif self.x == other.x + 1 and self.y == other.y - 1 then
@@ -910,25 +915,6 @@ function DX_Text:isOutline(other)
 	
 	return
 end
-
-
---[[
-				--	4 --- 2
-				--	|     |
-				--	|     |
-				--	3 --- 1		
-				
-				-- 1:   1	  1
-				-- 2:   1	 -1
-				-- 3:  -1	  1
-				-- 4:  -1	 -1		
-				
-				for i = 1, 4 do
-					local e = guiCreateLabel(eX + (i < 3 and 1 or -1), eY + (((i * 2) % 4) - 1), eW, eH, "", false)					
-					common["outline" .. i] = generateCode_commonDX(e, dx, true)
-					destroyElement(e)						
-				end
-]]
 
 
 addEventHandler("onClientRender", root,
