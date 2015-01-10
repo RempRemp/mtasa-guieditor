@@ -1176,6 +1176,7 @@ addEventHandler("onClientCursorMove", root,
 		
 		for _,item in ipairs(MenuItem.instances) do
 			if item:usable() and item.enabled then
+				-- inside the item
 				if absoluteX > item.position.x and absoluteX < (item.position.x + item.width) and
 					absoluteY > item.position.y and absoluteY < (item.position.y + item.height) then
 					
@@ -1209,6 +1210,10 @@ addEventHandler("onClientCursorMove", root,
 
 						setCursorPosition(x, y)
 					else
+						if item.buttonMouseState == Menu.mouseStates.on then
+							item.buttonMouseState = Menu.mouseStates.off
+						end
+						
 						if item.mouseState == Menu.mouseStates.on then
 							item:exitHandler()			
 						end	

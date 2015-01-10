@@ -410,7 +410,7 @@ function createItem_dxDimensionsEndY()
 					setElementData(element, "guieditor.internal:dimensionEndYInput", true)
 					
 					local dx = DX_Element.getDXFromElement(element)
-					local mbox = MessageBox_Input:create(false, "Set X Position", "Enter the " .. (dx and DX_Element.getTypeFriendly(dx.dxType).." " or "") .. "End Y position.\n\nNote: input is not filtered for invalid characters!", "Set position")
+					local mbox = MessageBox_Input:create(false, "Set Y Position", "Enter the " .. (dx and DX_Element.getTypeFriendly(dx.dxType).." " or "") .. "End Y position.\n\nNote: input is not filtered for invalid characters!", "Set position")
 					mbox:descriptionLines(2)
 					setElementData(mbox.input, "guieditor:filter", gFilters.noSpace)
 					mbox.onAccept = 
