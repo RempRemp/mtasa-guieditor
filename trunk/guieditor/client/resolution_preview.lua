@@ -311,3 +311,12 @@ function resolutionPreview.move(x, y)
 	end
 end
 
+function resolutionPreview.prepareMenu() 
+	gMenus.main:getItem(1):setEnabled(false)
+	gMenus.main:getItem(2):setEnabled(false)
+	
+	for i = 4, #gMenus.main.items - 1 do
+		gMenus.main:getItem(i):setEnabled(false)
+	end
+end
+

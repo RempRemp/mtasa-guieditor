@@ -534,7 +534,9 @@ function DX_Rectangle:create(x, y, width, height, colour, postGUI, element)
 	item.dxType = gDXTypes.rectangle
 	item.element = element
 	item.shadow_ = false
+	item.shadowColour_ = {0, 0, 0, 255}
 	item.outline_ = false
+	item.outlineColour_ = {0, 0, 0, 255}
 
 	item = setmetatable(item, {__index = DX_Rectangle})
 	
@@ -563,11 +565,11 @@ function DX_Rectangle:isShadow(other)
 			other.colour_[4] == 255
 	]]
 	
-	if other.dxType == gDXTypes.line and
-			other.colour_[1] == 0 and
-			other.colour_[2] == 0 and 
-			other.colour_[3] == 0 and 
-			other.colour_[4] == 255 then
+	if other.dxType == gDXTypes.line then
+			--other.colour_[1] == 0 and
+			--other.colour_[2] == 0 and 
+			--other.colour_[3] == 0 and 
+			--other.colour_[4] == 255 then
 			
 				 -- bottomLeft >
 			if (self.x - 1 == other.startX and 
@@ -602,11 +604,11 @@ function DX_Rectangle:isOutline(other)
 			other.colour_[4] == 255
 	]]
 	
-	if other.dxType == gDXTypes.line and
-			other.colour_[1] == 0 and
-			other.colour_[2] == 0 and 
-			other.colour_[3] == 0 and 
-			other.colour_[4] == 255 then
+	if other.dxType == gDXTypes.line then
+			--other.colour_[1] == 0 and
+			--other.colour_[2] == 0 and 
+			--other.colour_[3] == 0 and 
+			--other.colour_[4] == 255 then
 			
 				-- topLeft \/
 			if (self.x - 1 == other.startX and 
@@ -761,7 +763,9 @@ function DX_Text:create(text, x, y, width, height, colour, scale, font, alignX, 
 	item.dxType = gDXTypes.text
 	item.element = element
 	item.shadow_ = false
+	item.shadowColour_ = {0, 0, 0, 255}
 	item.outline_ = false
+	item.outlineColour_ = {0, 0, 0, 255}
 	
 	item = setmetatable(item, {__index = DX_Text})
 	
@@ -887,19 +891,19 @@ function DX_Text:isShadow(other)
 	return self.x == other.x - 1 and 
 			self.y == other.y - 1 and
 			self.width == other.width and 
-			self.height == other.height and
-			other.colour_[1] == 0 and 
-			other.colour_[2] == 0 and 
-			other.colour_[3] == 0 and 
-			other.colour_[4] == 255
+			self.height == other.height
+			--other.colour_[1] == 0 and 
+			--other.colour_[2] == 0 and 
+			--other.colour_[3] == 0 and 
+			--other.colour_[4] == 255
 end
 
 
 function DX_Text:isOutline(other)
-	if other.colour_[1] == 0 and 
-		other.colour_[2] == 0 and 
-		other.colour_[3] == 0 and 
-		other.colour_[4] == 255 and 
+	if --other.colour_[1] == 0 and 
+		--other.colour_[2] == 0 and 
+		--other.colour_[3] == 0 and 
+		--other.colour_[4] == 255 and 
 		self.width == other.width and 
 		self.height == other.height then
 		if self.x == other.x + 1 and self.y == other.y + 1 then
@@ -930,21 +934,21 @@ addEventHandler("onClientRender", root,
 				if dx:shadow() then
 					--dxDrawRectangle(dx.x + 1, dx.y + 1, dx.width, dx.height, tocolor(0, 0, 0, 255), dx.postGUI_)
 					-- bottom
-					dxDrawLine(dx.x - 1, dx.y + dx.height, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					dxDrawLine(dx.x - 1, dx.y + dx.height, dx.x + dx.width, dx.y + dx.height, tocolor(unpack(dx.shadowColour_)), 1, dx.postGUI_)
 					-- right
-					dxDrawLine(dx.x + dx.width, dx.y - 1, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)					
+					dxDrawLine(dx.x + dx.width, dx.y - 1, dx.x + dx.width, dx.y + dx.height, tocolor(unpack(dx.shadowColour_)), 1, dx.postGUI_)					
 				end
 				
 				if dx:outline() then
 					--dxDrawRectangle(dx.x - 1, dx.y - 1, dx.width + 2, dx.height + 2, tocolor(0, 0, 0, 255), dx.postGUI_)
 					-- left
-					dxDrawLine(dx.x - 1, dx.y - 1, dx.x - 1, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					dxDrawLine(dx.x - 1, dx.y - 1, dx.x - 1, dx.y + dx.height, tocolor(unpack(dx.outlineColour_)), 1, dx.postGUI_)
 					-- bottom
-					dxDrawLine(dx.x - 1, dx.y + dx.height, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					dxDrawLine(dx.x - 1, dx.y + dx.height, dx.x + dx.width, dx.y + dx.height, tocolor(unpack(dx.outlineColour_)), 1, dx.postGUI_)
 					-- right
-					dxDrawLine(dx.x + dx.width, dx.y - 1, dx.x + dx.width, dx.y + dx.height, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					dxDrawLine(dx.x + dx.width, dx.y - 1, dx.x + dx.width, dx.y + dx.height, tocolor(unpack(dx.outlineColour_)), 1, dx.postGUI_)
 					-- top
-					dxDrawLine(dx.x - 1, dx.y - 1, dx.x + dx.width, dx.y - 1, tocolor(0, 0, 0, 255), 1, dx.postGUI_)
+					dxDrawLine(dx.x - 1, dx.y - 1, dx.x + dx.width, dx.y - 1, tocolor(unpack(dx.outlineColour_)), 1, dx.postGUI_)
 				end
 				
 				dxDrawRectangle(dx.x, dx.y, dx.width, dx.height, tocolor(unpack(dx.colour_)), dx.postGUI_)
@@ -952,14 +956,14 @@ addEventHandler("onClientRender", root,
 				dxDrawImage(dx.x, dx.y, dx.width, dx.height, dx.filepath, dx.rotation_, dx.rOffsetX_, dx.rOffsetY_, tocolor(unpack(dx.colour_)), dx.postGUI_)
 			elseif dx.dxType == gDXTypes.text then
 				if dx:shadow() then
-					dxDrawText(dx.text_, dx.x + 1, dx.y + 1, dx.x + 1 + dx.width, dx.y + 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x + 1, dx.y + 1, dx.x + 1 + dx.width, dx.y + 1 + dx.height, tocolor(unpack(dx.shadowColour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
 				end	
 
 				if dx:outline() then
-					dxDrawText(dx.text_, dx.x - 1, dx.y - 1, dx.x - 1 + dx.width, dx.y - 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
-					dxDrawText(dx.text_, dx.x + 1, dx.y - 1, dx.x + 1 + dx.width, dx.y - 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
-					dxDrawText(dx.text_, dx.x + 1, dx.y + 1, dx.x + 1 + dx.width, dx.y + 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
-					dxDrawText(dx.text_, dx.x - 1, dx.y + 1, dx.x - 1 + dx.width, dx.y + 1 + dx.height, tocolor(0, 0, 0, 255), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x - 1, dx.y - 1, dx.x - 1 + dx.width, dx.y - 1 + dx.height, tocolor(unpack(dx.outlineColour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x + 1, dx.y - 1, dx.x + 1 + dx.width, dx.y - 1 + dx.height, tocolor(unpack(dx.outlineColour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x + 1, dx.y + 1, dx.x + 1 + dx.width, dx.y + 1 + dx.height, tocolor(unpack(dx.outlineColour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
+					dxDrawText(dx.text_, dx.x - 1, dx.y + 1, dx.x - 1 + dx.width, dx.y + 1 + dx.height, tocolor(unpack(dx.outlineColour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)
 				end
 
 				dxDrawText(dx.text_, dx.x, dx.y, dx.x + dx.width, dx.y + dx.height, tocolor(unpack(dx.colour_)), dx.scale_, dx.font_, dx.alignX_, dx.alignY_, dx.clip_, dx.wordwrap_, dx.postGUI_, dx.colourCoded_, dx.subPixelPositioning)

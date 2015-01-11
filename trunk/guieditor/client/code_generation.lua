@@ -77,13 +77,13 @@ function Generation.generateCode()
 				--dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.outline.position, dxCommon.outline.size, 0, 0, 0, 255, tostring(dx.postGUI_))	
 			
 				for i = 1, 4 do
-					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon["outline" .. i].position, 0, 0, 0, 255, 1, tostring(dx.postGUI_))
+					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon["outline" .. i].position, dx.outlineColour_[1], dx.outlineColour_[2], dx.outlineColour_[3], dx.outlineColour_[4], 1, tostring(dx.postGUI_))
 				end				
 			elseif dx:shadow() then
 				--dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawRectangle(%s, %s, tocolor(%i, %i, %i, %i), %s)", dxCommon.shadow.position, dxCommon.size, 0, 0, 0, 255, tostring(dx.postGUI_))
 			
 				for i = 1, 2 do
-					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon["shadow" .. i].position, 0, 0, 0, 255, 1, tostring(dx.postGUI_))
+					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawLine(%s, tocolor(%i, %i, %i, %i), %i, %s)", dxCommon["shadow" .. i].position, dx.shadowColour_[1], dx.shadowColour_[2], dx.shadowColour_[3], dx.shadowColour_[4], 1, tostring(dx.postGUI_))
 				end					
 			end	
 			
@@ -104,12 +104,12 @@ function Generation.generateCode()
 				--	3 --- 1	
 				
 				for i = 1, 4 do
-					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon["outline" .. i].position, dxCommon["outline" .. i].size, 0, 0, 0, 255, dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
+					dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon["outline" .. i].position, dxCommon["outline" .. i].size, dx.outlineColour_[1], dx.outlineColour_[2], dx.outlineColour_[3], dx.outlineColour_[4], dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
 				end
 				
 				--dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.shadow.position, dxCommon.shadow.size, 0, 0, 0, 255, dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
 			elseif dx:shadow() then
-				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.shadow.position, dxCommon.shadow.size, 0, 0, 0, 255, dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
+				dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.shadow.position, dxCommon.shadow.size, dx.shadowColour_[1], dx.shadowColour_[2], dx.shadowColour_[3], dx.shadowColour_[4], dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))
 			end	
 
 			dxcode = dxcode .. "\n" .. string.rep(Generation.indent, 2) .. string.format("dxDrawText(\"%s\", %s, %s, tocolor(%i, %i, %i, %i), " .. gNumberFormat .. ", %s, \"%s\", \"%s\", %s, %s, %s, %s, %s)", text, dxCommon.position, dxCommon.size, dx.colour_[1], dx.colour_[2], dx.colour_[3], dx.colour_[4], dx.scale_, dxCommon.fontString or tostring(dx.font_), tostring(dx.alignX_), tostring(dx.alignY_), tostring(dx.clip_), tostring(dx.wordwrap_), tostring(dx.postGUI_), tostring(dx.colourCoded_), tostring(dx.subPixelPositioning))

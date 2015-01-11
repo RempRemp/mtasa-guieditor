@@ -31,6 +31,9 @@
 		- Changed "Shadow" and "Outline" options of DX Rectangles to use DX lines rather than drawing an offset rectangle
 		- Added "Set default size" menu option to DX images
 		- Made "Outline" and "Shadow" on relative DX items output the correct code (+ improved loading relative DX a little)
+		- Fixed menu item overlay buttons not properly detecting mouse exit event
+		- Added "Locked" menu option that stops right click detecting the element (can be accessed/bypassed by holding ctrl)
+		- Added "Set outline colour" and "Set shadow colour" to DX items with shadow/outline options
 --]]--------------------------------------------------
 
 gEnabled = false
@@ -321,6 +324,8 @@ addEventHandler("onClientClick", root,
 			-- dx above gui elements
 			if dx and dx:postGUI() then
 				if resolutionPreview.active then
+					resolutionPreview.prepareMenu() 
+					gMenus.main:open(absoluteX, absoluteY, true)
 					return
 				end
 
@@ -341,29 +346,26 @@ addEventHandler("onClientClick", root,
 			-- dx below gui elements
 			if (not e) and dx and (not dx:postGUI()) then
 				if resolutionPreview.active then
+					resolutionPreview.prepareMenu() 
+					gMenus.main:open(absoluteX, absoluteY, true)
 					return
 				end
 
 				if dx.dxType == gDXTypes.line then
-					gMenus.dxLine:open(absoluteX, absoluteY, dx)
+					gMenus.dxLine:open(absoluteX, absoluteY, dx, true)
 				elseif dx.dxType == gDXTypes.rectangle then
-					gMenus.dxRectangle:open(absoluteX, absoluteY, dx)
+					gMenus.dxRectangle:open(absoluteX, absoluteY, dx, true)
 				elseif dx.dxType == gDXTypes.image then
-					gMenus.dxImage:open(absoluteX, absoluteY, dx)
+					gMenus.dxImage:open(absoluteX, absoluteY, dx, true)
 				elseif dx.dxType == gDXTypes.text then
-					gMenus.dxText:open(absoluteX, absoluteY, dx)
+					gMenus.dxText:open(absoluteX, absoluteY, dx, true)
 				end
 				return			
 			end
 			
 			if not e then
 				if resolutionPreview.active then
-					gMenus.main:getItem(1):setEnabled(false)
-					gMenus.main:getItem(2):setEnabled(false)
-					
-					for i = 4, #gMenus.main.items - 1 do
-						gMenus.main:getItem(i):setEnabled(false)
-					end
+					resolutionPreview.prepareMenu() 
 				else
 					for i = 1, #gMenus.main.items - 1 do
 						gMenus.main:getItem(i):setEnabled(true)
@@ -373,6 +375,8 @@ addEventHandler("onClientClick", root,
 				gMenus.main:open(absoluteX, absoluteY, true)
 			else
 				if resolutionPreview.active then
+					resolutionPreview.prepareMenu() 
+					gMenus.main:open(absoluteX, absoluteY, true)
 					return
 				end
 					
@@ -385,7 +389,7 @@ addEventHandler("onClientClick", root,
 					elementType = stripGUIPrefix(elementType)
 					
 					if gMenus[elementType] then
-						gMenus[elementType]:open(absoluteX, absoluteY, e)
+						gMenus[elementType]:open(absoluteX, absoluteY, e, true)
 					else
 						gMenus.main:open(absoluteX, absoluteY, true)
 					end

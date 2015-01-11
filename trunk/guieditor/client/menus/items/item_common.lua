@@ -335,6 +335,22 @@ function createItem_tutorial()
 	return MenuItem_Text:create("Tutorial"):set({onClick = Tutorial.startByID, onClickArgs = {"main"}})
 end
 
+function createItem_locked()
+	return MenuItem_Toggle:create(false, "Locked"):set(
+		{
+			onClickClose = false, 
+			onClick = setElementData,
+			onClickArgs = {"__gui", "guieditor:locked", "__value"}, 
+			itemID = "locked",
+			condition = 
+				function(menu)
+					return menu.controlHeld
+				end,
+			conditionArgs = {"__menu"}
+		}
+	)
+end
+
 --[[--------------------------------------------------
 	move
 --]]--------------------------------------------------
