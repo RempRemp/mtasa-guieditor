@@ -48,6 +48,7 @@ function Menu:create(title, width, xPos, yPos)
 			visible = false,
 			enabled = true,
 			id = #Menu.instances + 1,
+			controlHeld = false,
 		},
 		Menu
 	)
@@ -235,7 +236,22 @@ function Menu:getGUI(checkParent)
 end
 
 
-function Menu:open(x, y, guiParent)
+function Menu:open(x, y, guiParent, checkLocked)
+	if checkLocked then
+		local gui = guiParent
+		
+		if gui and type(gui) == "table" and gui.dxType then
+			gui = gui.element
+		end
+		
+		if getElementData(gui, "guieditor:locked") and not (getKeyState("lctrl") or getKeyState("rctrl")) then
+			gMenus.main:open(x, y, true)
+			return
+		end
+	end
+	
+	self.controlHeld = getKeyState("lctrl") or getKeyState("rctrl")
+
 	if self.onPreOpen then
 		self.onPreOpen(self)
 	end
@@ -381,6 +397,8 @@ function Menu:open(x, y, guiParent)
 					if size then
 						item:setValue(size)
 					end
+				elseif item.itemID == "locked" then
+					item:setValue(getElementData(gui, "guieditor:locked"))
 				end
 			end
 		end				

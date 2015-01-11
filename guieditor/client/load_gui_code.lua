@@ -1163,17 +1163,20 @@ function processDXEffects(preLoadDXCount)
 					
 					if #outline > 0 then
 						local removed = false
+						local colour = {0, 0, 0, 255}
 						
 						for _,id in ipairs(outline) do
 							if type(id) == "number" then
 								removal[id] = true
 								removed = true
+								colour = DX_Element.instances[id].colour_
 							elseif type(id) == "table" then
 								-- only remove them if we found all 4 corners, "id" is a Group type
 								if id:count() == 4 then
 									for _, otherID in pairs(id.items) do
 										removal[otherID] = true
 										removed = true
+										colour = DX_Element.instances[otherID].colour_
 									end
 									
 									--outputDebug("Found ".. i .." full outline", "TEXT_EFFECT_LOAD")
@@ -1184,16 +1187,19 @@ function processDXEffects(preLoadDXCount)
 						end
 						
 						dx.outline_ = removed
+						dx.outlineColour_ = colour
 					end
 					
 					if #shadow > 0 then
 						local removed = false
+						local colour = {0, 0, 0, 255}
 						
 						for _,id in ipairs(shadow) do
 							if type(id) == "number" then
 								if not removal[id] then
 									removal[id] = true
 									removed = true
+									colour = DX_Element.instances[id].colour_
 								end
 							elseif type(id) == "table" then
 								-- only remove them if we found the correct 2 corners, "id" is a Group type
@@ -1212,6 +1218,7 @@ function processDXEffects(preLoadDXCount)
 										for _, otherID in pairs(id.items) do
 											removal[otherID] = true
 											removed = true
+											colour = DX_Element.instances[otherID].colour_
 										end
 
 										--outputDebug("Found ".. i .." full shadow", "TEXT_EFFECT_LOAD")
@@ -1223,6 +1230,7 @@ function processDXEffects(preLoadDXCount)
 						end
 	
 						dx.shadow_ = removed
+						dx.shadowColour_ = colour
 					end
 				end
 			end

@@ -1057,6 +1057,58 @@ function createItem_dxShadow()
 	)
 end
 
+function createItem_dxShadowColour()
+	return MenuItem_Text:create("Set shadow colour"):set(
+		{
+			onClick =
+				function(element)
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if not dx then
+						return
+					end
+					
+					local cache = dx.shadowColour_
+					
+					colorPicker.openSelect()
+					
+					colorPicker.onClose = 
+						function(r, g, b, a, element)
+							--outputDebug("colour: " .. tostring(r) .. ", " .. tostring(g) .. ", " .. tostring(b) .. ", " .. tostring(a))
+							dx.shadowColour_ = {r, g, b, a}
+						end
+					colorPicker.onCloseArgs = {element}
+					
+					colorPicker.onUpdateSelectedValue = 						
+						function(r, g, b, a, element)
+							dx.shadowColour_ = {r, g, b, a}
+						end
+					colorPicker.onUpdateSelectedValueArgs = {element}
+					
+					colorPicker.onIgnore = 						
+						function(element, r, g, b, a)
+							dx.shadowColour_ = {r, g, b, a}
+						end
+					colorPicker.onIgnoreArgs = {element, unpack(cache)}
+				end,
+			onClickArgs = {"__gui"},
+			--[[
+			condition = 
+				function(element) 
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if dx then
+						return dx:shadow()
+					end
+					
+					return false
+				end,
+			conditionArgs = {"__gui"}
+			]]
+		}
+	)
+end
+
 
 function createItem_dxOutline()
 	return MenuItem_Toggle:create(false, "Outline"):set(
@@ -1072,6 +1124,45 @@ function createItem_dxOutline()
 				end,
 			onClickArgs = {"__gui", "__value"},
 			itemID = "outline"
+		}
+	)
+end
+
+function createItem_dxOutlineColour()
+	return MenuItem_Text:create("Set outline colour"):set(
+		{
+			onClick =
+				function(element)
+					local dx = DX_Element.getDXFromElement(element)
+						
+					if not dx then
+						return
+					end
+					
+					local cache = dx.outlineColour_
+					
+					colorPicker.openSelect()
+					
+					colorPicker.onClose = 
+						function(r, g, b, a, element)
+							--outputDebug("colour: " .. tostring(r) .. ", " .. tostring(g) .. ", " .. tostring(b) .. ", " .. tostring(a))
+							dx.outlineColour_ = {r, g, b, a}
+						end
+					colorPicker.onCloseArgs = {element}
+					
+					colorPicker.onUpdateSelectedValue = 						
+						function(r, g, b, a, element)
+							dx.outlineColour_ = {r, g, b, a}
+						end
+					colorPicker.onUpdateSelectedValueArgs = {element}
+					
+					colorPicker.onIgnore = 						
+						function(element, r, g, b, a)
+							dx.outlineColour_ = {r, g, b, a}
+						end
+					colorPicker.onIgnoreArgs = {element, unpack(cache)}
+				end,
+			onClickArgs = {"__gui"}
 		}
 	)
 end

@@ -50,6 +50,7 @@ function createMenu_window()
 	gMenus.window:addItem(createItem_copy()):setChild(gMenus.copySub.id)
 	gMenus.window:addItem(createItem_parent())
 	gMenus.window:addItem(createItem_deletion())
+	gMenus.window:addItem(createItem_locked())
 	gMenus.window:addItem(createItem_cancel())
 end
 
@@ -76,6 +77,7 @@ function createMenu_button()
 	gMenus.button:addItem(createItem_attachToElement())
 	gMenus.button:addItem(createItem_parent())
 	gMenus.button:addItem(createItem_deletion())	
+	gMenus.button:addItem(createItem_locked())
 	gMenus.button:addItem(createItem_cancel())
 end
 
@@ -100,6 +102,7 @@ function createMenu_memo()
 	gMenus.memo:addItem(createItem_attachToElement())
 	gMenus.memo:addItem(createItem_parent())
 	gMenus.memo:addItem(createItem_deletion())	
+	gMenus.memo:addItem(createItem_locked())
 	gMenus.memo:addItem(createItem_cancel())	
 end
 
@@ -129,6 +132,7 @@ function createMenu_label()
 	gMenus.label:addItem(createItem_attachToElement())
 	gMenus.label:addItem(createItem_parent())
 	gMenus.label:addItem(createItem_deletion())	
+	gMenus.label:addItem(createItem_locked())
 	gMenus.label:addItem(createItem_cancel())	
 end
 
@@ -155,6 +159,7 @@ function createMenu_checkbox()
 	gMenus.checkbox:addItem(createItem_attachToElement())
 	gMenus.checkbox:addItem(createItem_parent())
 	gMenus.checkbox:addItem(createItem_deletion())	
+	gMenus.checkbox:addItem(createItem_locked())
 	gMenus.checkbox:addItem(createItem_cancel())	
 end
 
@@ -182,6 +187,7 @@ function createMenu_edit()
 	gMenus.edit:addItem(createItem_attachToElement())
 	gMenus.edit:addItem(createItem_parent())
 	gMenus.edit:addItem(createItem_deletion())	
+	gMenus.edit:addItem(createItem_locked())
 	gMenus.edit:addItem(createItem_cancel())	
 end
 
@@ -205,6 +211,7 @@ function createMenu_progressbar()
 	gMenus.progressbar:addItem(createItem_attachToElement())
 	gMenus.progressbar:addItem(createItem_parent())
 	gMenus.progressbar:addItem(createItem_deletion())	
+	gMenus.progressbar:addItem(createItem_locked())
 	gMenus.progressbar:addItem(createItem_cancel())
 end
 
@@ -231,6 +238,7 @@ function createMenu_radiobutton()
 	gMenus.radiobutton:addItem(createItem_attachToElement())
 	gMenus.radiobutton:addItem(createItem_parent())
 	gMenus.radiobutton:addItem(createItem_deletion())	
+	gMenus.radiobutton:addItem(createItem_locked())
 	gMenus.radiobutton:addItem(createItem_cancel())
 end
 
@@ -258,6 +266,7 @@ function createMenu_gridlist()
 	gMenus.gridlist:addItem(createItem_attachToElement())
 	gMenus.gridlist:addItem(createItem_parent())
 	gMenus.gridlist:addItem(createItem_deletion())	
+	gMenus.gridlist:addItem(createItem_locked())
 	gMenus.gridlist:addItem(createItem_cancel())
 end
 
@@ -281,6 +290,7 @@ function createMenu_tabpanel()
 	gMenus.tabpanel:addItem(createItem_attachToElement())
 	gMenus.tabpanel:addItem(createItem_parent())
 	gMenus.tabpanel:addItem(createItem_deletion())	
+	gMenus.tabpanel:addItem(createItem_locked())
 	gMenus.tabpanel:addItem(createItem_cancel())
 end
 
@@ -318,6 +328,7 @@ function createMenu_staticimage()
 	gMenus.staticimage:addItem(createItem_attachToElement())
 	gMenus.staticimage:addItem(createItem_parent())
 	gMenus.staticimage:addItem(createItem_deletion())	
+	gMenus.staticimage:addItem(createItem_locked())
 	gMenus.staticimage:addItem(createItem_cancel())
 end
 
@@ -341,6 +352,7 @@ function createMenu_scrollbar()
 	gMenus.scrollbar:addItem(createItem_attachToElement())
 	gMenus.scrollbar:addItem(createItem_parent())
 	gMenus.scrollbar:addItem(createItem_deletion())	
+	gMenus.scrollbar:addItem(createItem_locked())
 	gMenus.scrollbar:addItem(createItem_cancel())
 end
 
@@ -363,6 +375,7 @@ function createMenu_scrollpane()
 	gMenus.scrollpane:addItem(createItem_attachToElement())
 	gMenus.scrollpane:addItem(createItem_parent())
 	gMenus.scrollpane:addItem(createItem_deletion())	
+	gMenus.scrollpane:addItem(createItem_locked())
 	gMenus.scrollpane:addItem(createItem_cancel())
 end
 
@@ -391,6 +404,7 @@ function createMenu_combobox()
 	gMenus.combobox:addItem(createItem_attachToElement())
 	gMenus.combobox:addItem(createItem_parent())
 	gMenus.combobox:addItem(createItem_deletion())	
+	gMenus.combobox:addItem(createItem_locked())
 	gMenus.combobox:addItem(createItem_cancel())
 end
 
@@ -465,6 +479,7 @@ function createMenu_dxLine()
 	gMenus.dxLine:addItem(createItem_postGUI())	
 	gMenus.dxLine:addItem(createItem_copy())
 	gMenus.dxLine:addItem(createItem_dxDeletion())	
+	gMenus.dxLine:addItem(createItem_locked())
 	gMenus.dxLine:addItem(createItem_cancel())
 end
 
@@ -476,7 +491,9 @@ function createMenu_dxRectangle()
 	gMenus.dxRectangle:addItem(createItem_resize()):setChild(gMenus.resizeSub.id)
 	gMenus.dxRectangle:addItem(createItem_colour())
 	gMenus.dxRectangle:addItem(createItem_dxShadow())	
+	gMenus.dxRectangle:addItem(createItem_dxShadowColour())	
 	gMenus.dxRectangle:addItem(createItem_dxOutline())	
+	gMenus.dxRectangle:addItem(createItem_dxOutlineColour())	
 	gMenus.dxRectangle:addItem(createItem_outputType())
 	gMenus.dxRectangle:addItem(createItem_positionCode()):setChild(gMenus.positionCodeSub.id)
 	gMenus.dxRectangle:addItem(createItem_dxDimensions()):setChild(gMenus.dxDimensionsSub.id)
@@ -487,6 +504,7 @@ function createMenu_dxRectangle()
 	gMenus.dxRectangle:addItem(createItem_postGUI())	
 	gMenus.dxRectangle:addItem(createItem_copy())
 	gMenus.dxRectangle:addItem(createItem_dxDeletion())	
+	gMenus.dxRectangle:addItem(createItem_locked())
 	gMenus.dxRectangle:addItem(createItem_cancel())
 end
 
@@ -506,8 +524,10 @@ function createMenu_dxText()
 	gMenus.dxText:addItem(createItem_wordwrap())		
 	gMenus.dxText:addItem(createItem_clip())		
 	gMenus.dxText:addItem(createItem_colourCoded())		
-	gMenus.dxText:addItem(createItem_dxShadow())		
+	gMenus.dxText:addItem(createItem_dxShadow())	
+	gMenus.dxText:addItem(createItem_dxShadowColour())		
 	gMenus.dxText:addItem(createItem_dxOutline())	
+	gMenus.dxText:addItem(createItem_dxOutlineColour())		
 	gMenus.dxText:addItem(createItem_outputType())	
 	gMenus.dxText:addItem(createItem_positionCode()):setChild(gMenus.positionCodeSub.id)
 	gMenus.dxText:addItem(createItem_dxDimensions()):setChild(gMenus.dxDimensionsSub.id)
@@ -518,6 +538,7 @@ function createMenu_dxText()
 	gMenus.dxText:addItem(createItem_postGUI())	
 	gMenus.dxText:addItem(createItem_copy())
 	gMenus.dxText:addItem(createItem_dxDeletion())	
+	gMenus.dxText:addItem(createItem_locked())
 	gMenus.dxText:addItem(createItem_cancel())
 end
 
@@ -541,5 +562,6 @@ function createMenu_dxImage()
 	gMenus.dxImage:addItem(createItem_postGUI())	
 	gMenus.dxImage:addItem(createItem_copy())
 	gMenus.dxImage:addItem(createItem_dxDeletion())	
+	gMenus.dxImage:addItem(createItem_locked())
 	gMenus.dxImage:addItem(createItem_cancel())
 end
