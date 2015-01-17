@@ -25,15 +25,10 @@
 		- Output in OO format
 		- Document all new changes
 		- add undo/redo actions for gridlist options
+		- Fix the problems with relative DX loading/output
 		
 	Changes:
-		- Fixed problem with the "Automatically resize output window" setting when generating DX code
-		- Changed "Shadow" and "Outline" options of DX Rectangles to use DX lines rather than drawing an offset rectangle
-		- Added "Set default size" menu option to DX images
-		- Made "Outline" and "Shadow" on relative DX items output the correct code (+ improved loading relative DX a little)
-		- Fixed menu item overlay buttons not properly detecting mouse exit event
-		- Added "Locked" menu option that stops right click detecting the element (can be accessed/bypassed by holding ctrl)
-		- Added "Set outline colour" and "Set shadow colour" to DX items with shadow/outline options
+
 --]]--------------------------------------------------
 
 gEnabled = false
