@@ -150,6 +150,11 @@ function DX_Element:postGUI(value)
 end
 
 
+function DX_Element:set(key, value)
+	self[key] = value
+end
+
+
 function DX_Element:setX(value, ignoreUndo)
 	if value then
 		if not ignoreUndo then

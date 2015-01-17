@@ -96,9 +96,9 @@ function DX_Radiobutton:draw()
 			local quarter = self.width / 4
 			
 			dxDrawLine(self.x + quarter, self.y + quarter, self.x + self.width - quarter, self.y + quarter, tocolor(unpack(self.borderColour)), 1)
-			dxDrawLine(self.x + quarter, self.y + quarter, self.x + quarter, self.y + self.height - quarter, tocolor(unpack(self.borderColour)), 1)
+			dxDrawLine(self.x + quarter, self.y + quarter, self.x + quarter, self.y + self.height - quarter - 1, tocolor(unpack(self.borderColour)), 1)
 			dxDrawLine(self.x + quarter, self.y + self.height - 1 - quarter, self.x + self.width - quarter, self.y + self.height - 1 - quarter, tocolor(unpack(self.borderColour)), 1)
-			dxDrawLine(self.x + self.width - quarter, self.y + quarter, self.x + self.width - quarter, self.y + self.height - quarter, tocolor(unpack(self.borderColour)), 1)			
+			dxDrawLine(self.x + self.width - quarter, self.y + quarter, self.x + self.width - quarter, self.y + self.height - quarter - 1, tocolor(unpack(self.borderColour)), 1)			
 		end
 				
 		if self:selected() then

@@ -85,9 +85,9 @@ function DX_Checkbox:draw()
 	if self:visible() then
 		if self.borderColour then
 			dxDrawLine(self.x, self.y + 1, self.x + self.width, self.y + 1, tocolor(unpack(self.borderColour)), 1)
-			dxDrawLine(self.x, self.y, self.x, self.y + self.height, tocolor(unpack(self.borderColour)), 1)
+			dxDrawLine(self.x, self.y, self.x, self.y + self.height - 2, tocolor(unpack(self.borderColour)), 1)
 			dxDrawLine(self.x, self.y + self.height - 2, self.x + self.width, self.y + self.height - 2, tocolor(unpack(self.borderColour)), 1)
-			dxDrawLine(self.x + self.width, self.y, self.x + self.width, self.y + self.height, tocolor(unpack(self.borderColour)), 1)
+			dxDrawLine(self.x + self.width, self.y, self.x + self.width, self.y + self.height - 2, tocolor(unpack(self.borderColour)), 1)
 		end
 				
 		if self:selected() then

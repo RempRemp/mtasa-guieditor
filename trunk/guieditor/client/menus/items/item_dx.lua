@@ -1075,6 +1075,16 @@ function createItem_dxShadowColour()
 					colorPicker.onClose = 
 						function(r, g, b, a, element)
 							--outputDebug("colour: " .. tostring(r) .. ", " .. tostring(g) .. ", " .. tostring(b) .. ", " .. tostring(a))
+							local action = {}
+							action[#action + 1] = {}
+							action[#action].ufunc = DX_Element.set
+							action[#action].uvalues = {dx, "shadowColour_", {cache[1], cache[2], cache[3], cache[4]}}
+							action[#action].rfunc = DX_Element.set
+							action[#action].rvalues = {dx, "shadowColour_", {r, g, b, a}}
+							
+							action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." shadow colour"
+							UndoRedo.add(action)							
+							
 							dx.shadowColour_ = {r, g, b, a}
 						end
 					colorPicker.onCloseArgs = {element}
@@ -1146,6 +1156,17 @@ function createItem_dxOutlineColour()
 					colorPicker.onClose = 
 						function(r, g, b, a, element)
 							--outputDebug("colour: " .. tostring(r) .. ", " .. tostring(g) .. ", " .. tostring(b) .. ", " .. tostring(a))
+							
+							local action = {}
+							action[#action + 1] = {}
+							action[#action].ufunc = DX_Element.set
+							action[#action].uvalues = {dx, "outlineColour_", {cache[1], cache[2], cache[3], cache[4]}}
+							action[#action].rfunc = DX_Element.set
+							action[#action].rvalues = {dx, "outlineColour_", {r, g, b, a}}
+							
+							action.description = "Set ".. DX_Element.getTypeFriendly(dx.dxType) .." outline colour"
+							UndoRedo.add(action)								
+							
 							dx.outlineColour_ = {r, g, b, a}
 						end
 					colorPicker.onCloseArgs = {element}
