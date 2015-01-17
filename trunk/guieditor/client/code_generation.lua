@@ -9,7 +9,7 @@
 
 gDecimalPlaces = 2
 gNumberFormat = "%."..tostring(gDecimalPlaces).."f"
-gDXNumberFormat = "%.3f"
+gDXNumberFormat = "%.4f"
 
 Generation = {
 	indent = "    ",
